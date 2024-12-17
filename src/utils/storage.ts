@@ -22,7 +22,7 @@ export const storage = {
 }
 
 export const STORAGE_KEY = {
-  TOKEN: 'token',
-  USER_INFO: 'userInfo',
-  COOKIE: 'cookie'
+  TOKEN: 'Token',
+  USER_INFO: 'UserInfo',
+  COOKIE: 'Cookie'
 }

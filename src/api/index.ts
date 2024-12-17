@@ -1,3 +1,3 @@
-export { auth } from './modules/auth'
-export { song } from './modules/song'
-export { user } from './modules/user'
+export { loginAPI } from './modules/login'
+export { UserAPI } from './modules/user'
+export  {SongAPI}from './modules/song'

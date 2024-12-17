@@ -32,3 +32,8 @@ export interface PlayMode {
   type: 'sequence' | 'random' | 'loop'
   label: string
 }
+export interface lyric {
+  time: number
+  text: string
+  translate_intoChinese: string
+}

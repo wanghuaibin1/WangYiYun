@@ -4,7 +4,7 @@ export interface LoginResponse {
   code: number
   cookie: string
   token: string
-  // ... 其他返回字段
+  message?: string
 }
 
 export interface ApiResponse<T> {
@@ -29,47 +29,60 @@ export interface QRKeyResponse {
 
 export interface QRImageResponse {
   data: {
-    qrimg: string
-    qrurl: string
+    qrimg: string  // 二维码图片 base64
+    qrurl: string  // 二维码内容
   }
 }
 
 export interface QRCheckResponse {
-  code: number
+  code: QRCodeStatus
   cookie?: string
   message?: string
   nickname?: string
   avatarUrl?: string
 }
 
-export interface LoginStatusResponse {
-  value: {
-    data: {
-      account: {
-        id: number
-      }
-    }
-  }
-}
-
-export interface UserInfoResponse {
-  value: any  // 根据实际返回数据定义类型
-}
-
 export const auth = {
   // 手机号登录
-  loginByPhone(phone: string, password: string) {
-    return request.post<ApiResponse<LoginResponse>>('/login/cellphone', {
+  loginByPhone(phone: string, password: string, params?: {
+    countrycode?: string,  // 国家码
+    md5_password?: string, // md5加密后的密码
+    captcha?: string       // 验证码
+  }) {
+    return request.post<LoginResponse>('/login/cellphone', {
       phone,
-      password
+      password,
+      ...params
     })
   },
 
   // 邮箱登录
-  loginByEmail(email: string, password: string) {
-    return request.post<ApiResponse<LoginResponse>>('/login', {
+  loginByEmail(email: string, password: string, md5_password?: string) {
+    return request.post<LoginResponse>('/login', {
       email,
-      password
+      password,
+      md5_password
+    })
+  },
+
+  // 获取手机验证码
+  getCaptcha(phone: string) {
+    return request.get<ApiResponse<any>>('/captcha/sent', {
+      params: {
+        phone,
+        timestamp: Date.now()
+      }
+    })
+  },
+
+  // 验证验证码
+  verifyCaptcha(phone: string, captcha: string) {
+    return request.get<ApiResponse<any>>('/captcha/verify', {
+      params: {
+        phone,
+        captcha,
+        timestamp: Date.now()
+      }
     })
   },
 
@@ -98,26 +111,6 @@ export const auth = {
     return request.get<QRCheckResponse>('/login/qr/check', {
       params: {
         key,
-        timestamp: Date.now()
-      }
-    })
-  },
-
-  // 获取登录状态
-  getLoginStatus(cookie: string) {
-    return request.get<LoginStatusResponse>('/login/status', {
-      params: {
-        cookie,
-        timestamp: Date.now()
-      }
-    })
-  },
-
-  // 获取用户信息
-  getUserInfo(uid: number) {
-    return request.get<UserInfoResponse>('/user/detail', {
-      params: {
-        uid,
         timestamp: Date.now()
       }
     })
