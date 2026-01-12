@@ -1,7 +1,2 @@
-import { createPinia } from 'pinia'
-
-const pinia = createPinia()
-
-export default pinia
-export * from './modules/user'
-export * from './modules/song'
+export { useUserStore } from './modules/user.ts'
+export { useSongStore } from './modules/song.ts'

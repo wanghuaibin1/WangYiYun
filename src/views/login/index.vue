@@ -232,7 +232,7 @@ const initQRCode = async () => {
       }
     }
   } catch (error) {
-    ElMessage.error('获取二维码失败')
+    ElMessage.error('获取二维码失败',error)
   }
 }
 
@@ -288,7 +288,7 @@ const startQRCheck = () => {
         }
     } catch (error) {
       clearInterval(qrCheckTimer.value)
-      ElMessage.error('检查二维码状态失败')
+      ElMessage.error('检查二维码状态失败',error)
     }
   }, 2000)
 }

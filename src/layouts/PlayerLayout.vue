@@ -10,13 +10,18 @@
       </el-container>
     </el-container>
 
-    <div class="fixed bottom-0 w-full h-[50px] bg-gray-200">
+    <div class="fixed bottom-0 w-full bg-gray-200">
       <PlayerControlBar />
     </div>
-
+      <PlayListPage v-if="SongStore.playListDisplay"/>
   </div>
 </template>
 
 <script setup lang="ts">
+import { useSongStore } from '@/stores/modules/song.ts'
 import PlayerControlBar from '@/views/PlayerControlBar/index.vue'
+import PlayListPage from '@/views/PlayListPage/index.vue'
+
+const SongStore = useSongStore()
+
 </script>

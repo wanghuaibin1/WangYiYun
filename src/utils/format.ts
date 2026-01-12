@@ -6,15 +6,24 @@ interface lyric {
   translate_intoChinese: string
 }
 
-// 格式化时间
-export function formatTime(time: number):string {
+// 格式化歌曲总时长时间
+export function formatTime(time: number): string {
   const minutes = Math.floor(time / 1000 / 60)
   const seconds = Math.floor((time / 1000) % 60)
   return `${minutes}:${seconds.toString().padStart(2, '0')}`
 }
 
+// 格式化歌曲播放进度
+export function formatProgress(currentTime: number): string {
+  let m = parseInt(currentTime / 60)
+  let s = parseInt(currentTime % 60)
+  m = m >= 10 ? m : (m = '0' + m)
+  s = s >= 10 ? s : (s = '0' + s)
+  return `${m}:${s}`
+}
+
 // 格式化数字
-export function formatNumber(num: number): string{
+export function formatNumber(num: number): string {
   if (num < 10000) return num
   return Math.floor(num / 10000) + '万'
 }
@@ -125,4 +134,38 @@ export function formatLyr(lrc: string): lyric[] {
   // 按时间排序
   lyricsArray.sort((a, b) => a.time - b.time)
   return lyricsArray
+}
+
+//获取最接近当前播放时间的歌词
+export function getLyricByTime (currentTime) {
+  const SongStore = useSongStore()
+  const lyrics =SongStore.lyric;
+  let left = 0;
+  let right = lyrics.length - 1;
+  let closestLyric = '';
+
+  // 使用二分查找找到最接近的歌词
+  while (left <= right) {
+    const mid = Math.floor((left + right) / 2);
+
+    // 判断是否是最后一条歌词
+    if (mid === lyrics.length - 1) {
+      closestLyric = lyrics[mid];
+      break;
+    }
+
+    // 判断当前歌词是否处于播放时间范围内
+    if (currentTime >= lyrics[mid].time && currentTime < lyrics[mid + 1].time) {
+      closestLyric = lyrics[mid];
+      break;
+    }
+
+    // 如果当前时间比 mid 的时间大，往右查找
+    if (lyrics[mid].time <= currentTime) {
+      left = mid + 1;
+    } else {
+      right = mid - 1;
+    }
+  }
+  return closestLyric;
 }

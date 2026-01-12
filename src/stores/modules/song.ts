@@ -1,8 +1,10 @@
 import { defineStore } from 'pinia'
 import type { Song, PlayMode, lyric } from '@/types/player'
+import { usePlayer } from '@/hooks/usePlayer.ts'
 
 export const useSongStore = defineStore('song', {
   state: () => ({
+    //播放列表
     playList: [
       {
         name: '城北的花',
@@ -194,21 +196,193 @@ export const useSongStore = defineStore('song', {
         rurl: null,
         publishTime: 0,
       },
-    ] as Song[], //播放列表
-    playStatus: false as boolean, //播放状态
-    currentIndex: 0 as number, //当前播放歌曲的索引
-    currentSong: {} as Song, //当前播放歌曲
-    duration: 0 as number, //当前歌曲的总时长
-    currentTime: 0 as number, //当前歌曲的当前播放时长
-    volume: 0.5 as number, //音量
-    playMode: { type: 'sequence', label: '顺序播放' } as PlayMode, //播放模式
-    songUrl: '' as string, //当前歌曲的url
-    lyric: [] as lyric[], //当前歌曲的歌词
-    isFavorite: false as boolean, //当前歌曲是否被收藏
-    currentTimeLyric: [] as lyric[], //当前时间播放的歌词
+    ] as Song[],
+    //播放状态
+    playStatus: false as boolean,
+    //当前播放歌曲的索引
+    currentIndex: 0 as number,
+    // 在随机播放列表中的索引（切换模式时用来保持同步）
+    currentSongInShuffledIndex: 0,
+    //当前播放歌曲
+    currentSong: {} as Song,
+    //当前歌曲的总时长
+    duration: 0 as number,
+    //格式化后的当前播放时间
+    formatCurrentTime: '00:00' as string,
+    //播放时长进度
+    currentTime: 0 as number,
+    //播放进度条进度
+    playProgressBarRate: 0 as number,
+    //音量
+    volume: 50 as number,
+    //播放模式
+    playMode: { type: 'sequence', label: '顺序播放' } as PlayMode,
+    //当前歌曲的url
+    songUrl: '' as string,
+    //歌曲解析的歌词
+    lyric: [] as lyric[],
+    //当前歌曲是否被收藏
+    isFavorite: false as boolean,
+    //随机播放的列表
+    shuffledPlayList: [] as Song[],
+    //当前时间播放展示的歌词
+    currentTimeLyric: [] as lyric[],
+    //当前时间记录的歌词
+    currenLastLy: [] as lyric[],
+    //详情页的展示状态
+    songDetailsDisplay: false as boolean,
+    //播放列表的展示状态
+    playListDisplay: false as boolean,
+    //收藏状态
+    hearted: false as boolean,
   }),
 
-  getters: {},
+  getters: {
+    //返回不同播放模式的icon
+    playModeIcon(): string {
+      switch (this.playMode.type) {
+        case 'sequence':
+          return (
+            '          <svg  t="1729340192401" class="icon" viewBox="0 0 1152 1024" version="1.1"\n' +
+            '               xmlns="http://www.w3.org/2000/svg" p-id="9608" width="20" height="20">\n' +
+            '            <path\n' +
+            '                d="M0 134.726775h904.001993v129.115815H0zM0 508.238107h904.001993v129.115816H0zM0 894.629141h904.001993v129.243337H0z"\n' +
+            '                p-id="9609" fill="#e6e6e6"></path>\n' +
+            '            <path\n' +
+            '                d="M1147.696139 263.84259h-258.359153V3.761893M1147.696139 637.353923h-258.359153V377.273225M1147.696139 1023.936239h-258.359153V763.855542"\n' +
+            '                p-id="9610" fill="#e6e6e6"></path>\n' +
+            '          </svg>'
+          )
+        case 'random':
+          return (
+            '          <svg  t="1731052051779" class="icon" viewBox="0 0 1024 1024" version="1.1"\n' +
+            '               xmlns="http://www.w3.org/2000/svg"\n' +
+            '               p-id="4278" width="20" height="20">\n' +
+            '            <path\n' +
+            '                d="M753.564731 337.471035c-45.8697 0-160.259984 113.849978-243.789399 194.548928C383.134027 654.383848 263.508509 773.284865 167.764911 773.284865l-58.892295 0c-24.068162 0-43.581588-19.526729-43.581588-43.581588s19.513426-43.581588 43.581588-43.581588l58.892295 0c60.504002 0 183.002964-121.68134 281.432741-216.784348 119.79641-115.744117 223.254713-219.029482 304.368102-219.029482l56.209186 0-59.641355-57.828057c-17.033955-16.993023-17.060561-42.902112-0.057305-59.927881 17.002232-17.030885 44.596707-17.064654 61.631686-0.065492l134.207631 133.874033c8.192589 8.172123 12.794397 19.238157 12.794397 30.803563 0 11.564383-4.601808 22.604834-12.794397 30.776957L811.706943 461.72599c-8.505721 8.486278-19.646456 12.522198-30.78719 12.522198-11.166317 0-22.333658-4.676509-30.844495-13.199627-17.003256-17.025769-16.975627-45.432749 0.057305-62.425771l59.641355-61.151755L753.564731 337.471035zM811.706943 561.66105c-17.034978-16.999163-44.629453-16.972557-61.631686 0.058328-17.003256 17.024745-16.975627 46.257533 0.057305 63.250556l59.641355 61.150732-56.209186 0c-35.793204 0-95.590102-52.946886-154.87637-108.373243-17.576307-16.435321-45.161572-16.3422-61.594847 1.226944-16.444531 17.568121-15.523555 46.393633 2.053776 62.823837 90.322122 84.458577 151.246703 131.484613 214.417441 131.484613l56.209186 0-59.641355 57.824987c-17.033955 16.993023-17.060561 43.736107-0.057305 60.761875 8.511861 8.523117 19.678178 12.369725 30.844495 12.369725 11.140735 0 22.281469-4.453429 30.78719-12.939707L945.914574 757.311055c8.192589-8.173147 12.794397-19.315928 12.794397-30.881334 0-11.564383-4.601808-22.682605-12.794397-30.855752L811.706943 561.66105zM108.871593 337.471035l58.892295 0c45.932122 0 114.40154 58.455343 168.915108 107.942431 8.352225 7.576559 18.832927 12.140505 29.29214 12.140505 11.852956 0 23.673166-4.394077 32.270984-13.857613 16.182564-17.807574 14.859429-46.823422-2.958378-62.998823-85.247546-77.381391-156.561755-130.388652-227.519854-130.388652l-58.892295 0c-24.068162 0-43.581588 19.526729-43.581588 43.581588S84.804455 337.471035 108.871593 337.471035z"\n' +
+            '                p-id="4279" fill="#e6e6e6"></path>\n' +
+            '          </svg>'
+          )
+        case 'loop':
+          return (
+            '          <svg t="1731052119224" class="icon" viewBox="0 0 1024 1024" version="1.1"\n' +
+            '               xmlns="http://www.w3.org/2000/svg"\n' +
+            '               p-id="8348" width="20" height="20">\n' +
+            '            <path\n' +
+            '                d="M192 789.333333a21.24 21.24 0 0 1-12.8-4.28 344.513333 344.513333 0 0 1-99.333333-118A341.246667 341.246667 0 0 1 384 170.666667h256q6.36 0 12.733333 0.233333l-49.153333-49.146667a21.333333 21.333333 0 0 1 30.173333-30.173333l85.333334 85.333333a21.333333 21.333333 0 0 1 0 30.173334l-85.333334 85.333333a21.333333 21.333333 0 0 1-30.173333-30.173333l48.666667-48.666667Q646.126667 213.333333 640 213.333333H384c-164.666667 0-298.666667 134-298.666667 298.666667 0 94.833333 43.546667 181.933333 119.48 238.966667A21.333333 21.333333 0 0 1 192 789.333333z m228.433333 143.06a21.333333 21.333333 0 0 0 0-30.173333l-49.153333-49.146667q6.366667 0.233333 12.733333 0.233334H640a341.46 341.46 0 0 0 304.146667-496.42 344.513333 344.513333 0 0 0-99.333334-118 21.333333 21.333333 0 1 0-25.626666 34.113333C895.12 330.066667 938.666667 417.166667 938.666667 512c0 164.666667-134 298.666667-298.666667 298.666667H384q-6.12 0-12.246667-0.246667l48.666667-48.666667a21.333333 21.333333 0 0 0-30.173333-30.173333l-85.333334 85.333333a21.333333 21.333333 0 0 0 0 30.173334l85.333334 85.333333a21.333333 21.333333 0 0 0 30.173333 0zM554.666667 618.666667V405.333333a21.333333 21.333333 0 0 0-21.333334-21.333333h-42.666666a21.333333 21.333333 0 0 0 0 42.666667h21.333333v192a21.333333 21.333333 0 0 0 42.666667 0z"\n' +
+            '                fill="#e6e6e6" p-id="8349"></path>\n' +
+            '          </svg>'
+          )
+        default:
+          return (
+            '          <svg  t="1729340192401" class="icon" viewBox="0 0 1152 1024" version="1.1"\n' +
+            '               xmlns="http://www.w3.org/2000/svg" p-id="9608" width="20" height="20">\n' +
+            '            <path\n' +
+            '                d="M0 134.726775h904.001993v129.115815H0zM0 508.238107h904.001993v129.115816H0zM0 894.629141h904.001993v129.243337H0z"\n' +
+            '                p-id="9609" fill="#e6e6e6"></path>\n' +
+            '            <path\n' +
+            '                d="M1147.696139 263.84259h-258.359153V3.761893M1147.696139 637.353923h-258.359153V377.273225M1147.696139 1023.936239h-258.359153V763.855542"\n' +
+            '                p-id="9610" fill="#e6e6e6"></path>\n' +
+            '          </svg>'
+          )
+      }
+    },
+  },
 
-  actions: {},
+  actions: {
+    /**
+     * 切换到播放列表中的下一首歌曲，根据播放模式选择对应的逻辑。
+     *
+     * @param player - 用于播放歌曲的回调函数，接收歌曲 ID 作为参数。
+     */
+    nextSong(player: (id: number, currentIndex: number) => void): void {
+      switch (this.playMode.type) {
+        // 顺序播放
+        case 'sequence':
+          this.currentIndex = (this.currentIndex + 1) % this.playList.length // 顺序播放，当前索引递增
+          player(this.playList[this.currentIndex].id, this.currentIndex)
+          break
+        // 随机播放
+        case 'random':
+          this.currentIndex = (this.currentIndex + 1) % this.shuffledPlayList.length // 顺序播放已经打乱的列表
+          player(this.shuffledPlayList[this.currentIndex].id, this.currentIndex)
+          break
+        //单曲循环
+        case 'loop':
+          player(this.playList[this.currentIndex].id, this.currentIndex)
+          break
+        default:
+          console.warn('未知播放模式:', this.playMode.type) // 处理未定义的播放模式
+          break
+      }
+    },
+
+    /**
+     * 切换到播放列表中的上一首歌曲，根据播放模式选择对应的逻辑。
+     *
+     * @param player - 用于播放歌曲的回调函数，接收歌曲 ID 作为参数。
+     */
+    prevSong(player: (id: number, currentIndex: number) => void): void {
+      switch (this.playMode.type) {
+        // 顺序播放
+        case 'sequence':
+          this.currentIndex = (this.currentIndex - 1 + this.playList.length) % this.playList.length
+          player(this.playList[this.currentIndex].id, this.currentIndex)
+          break
+
+        // 随机播放
+        case 'random':
+          this.currentIndex =
+            (this.currentIndex - 1 + this.shuffledPlayList.length) % this.shuffledPlayList.length
+          player(this.shuffledPlayList[this.currentIndex].id, this.currentIndex)
+          break
+
+        // 单曲循环
+        case 'loop':
+          player(this.playList[this.currentIndex].id, this.currentIndex)
+          break
+
+        default:
+          console.warn('未知播放模式:', this.playMode.type) // 处理未定义的播放模式
+          break
+      }
+    },
+
+    /**
+     * 根据当前播放模式初始化播放列表，并正确设置播放索引。
+     */
+    initializePlayList(): void {
+      const { getRandomPlayList } = usePlayer()
+      if (this.playMode.type === 'random') {
+        this.currentSongInShuffledIndex = this.currentIndex
+        this.currentIndex = 0 // 重置为随机播放列表的第一首歌
+        this.shuffledPlayList = getRandomPlayList()
+      } else {
+        // 如果切换到顺序播放，使用顺序播放列表
+        this.shuffledPlayList = this.playList
+        this.currentIndex = this.currentSongInShuffledIndex
+      }
+    },
+
+    /**
+     * 切换当前播放模式（顺序播放、随机播放、单曲循环），并重新初始化播放列表。
+     */
+    changePlayMode(): void {
+      const modes: PlayMode[] = [
+        { type: 'sequence', label: '顺序播放' },
+        { type: 'random', label: '随机播放' },
+        { type: 'loop', label: '单曲循环' },
+      ]
+      // 查找当前模式的索引
+      const currentIndex = modes.findIndex((mode) => mode.type === this.playMode.type)
+      // 如果找不到当前模式，默认从顺序播放开始
+      if (currentIndex === -1) {
+        this.playMode = modes[0]
+      } else {
+        // 切换到下一个模式，模运算确保循环切换
+        this.playMode = modes[(currentIndex + 1) % modes.length]
+        this.initializePlayList()
+      }
+    },
+  },
 })
