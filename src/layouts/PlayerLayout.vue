@@ -10,7 +10,7 @@
       </el-container>
     </el-container>
 
-    <div class="fixed bottom-0 w-full bg-gray-200">
+    <div class="fixed bottom-0 w-full bg-gray-200 z-[10000]">
       <PlayerControlBar />
     </div>
       <PlayListPage v-if="SongStore.playListDisplay"/>
