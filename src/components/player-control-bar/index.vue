@@ -70,7 +70,6 @@
 
 <script setup lang="ts">
 import {
-  defineComponent,
   computed,
   ref,
   onMounted,
@@ -84,10 +83,6 @@ import { getLyricByTime, formatProgress } from '@/utils/format.ts'
 import VolumeControl from '@/components/player-control/VolumeControl.vue'
 import PlaybackControls from '@/components/player-control/PlaybackControls.vue'
 import ProgressBar from '@/components/player-control/ProgressBar.vue'
-
-defineComponent({
-  name: 'playerControlBar',
-})
 
 const SongStore = useSongStore()
 const { player } = usePlayer()
@@ -160,7 +155,7 @@ const handleTimeUpdate = () => {
     SongStore.formatCurrentTime = formatProgress(curTime)
     SongStore.currentTime = curTime
     SongStore.playProgressBarRate = curTime
-    const currentLyric = getLyricByTime(curTime)
+    const currentLyric = getLyricByTime(curTime, SongStore.lyric)
     if (currentLyric.text && currentLyric.text !== SongStore.currentTimeLyric.text) {
       SongStore.currentTimeLyric = currentLyric
       SongStore.currenLastLy = currentLyric
@@ -201,3 +196,4 @@ onMounted(async () => {
   height: 10px;
 }
 </style>
+

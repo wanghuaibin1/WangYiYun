@@ -59,7 +59,8 @@ export function usePlayer() {
       SongStore.songUrl = resUrl.value.data[0].url
 
       const { data: resLyric } = await SongAPI.getLyric(id)
-      SongStore.lyric = formatLyr(resLyric.value)
+      const songDuration = SongStore.currentSong.dt || 0
+      SongStore.lyric = formatLyr(resLyric.value, songDuration)
 
       if (SongStore.lyric.length > 0) {
         SongStore.currentTimeLyric = SongStore.lyric[0]

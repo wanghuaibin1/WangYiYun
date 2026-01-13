@@ -27,15 +27,10 @@
 </template>
 
 <script setup lang="ts">
-import { defineComponent } from 'vue'
 import { useSongStore } from '@/stores/modules/song.ts'
 import {  formatTime } from '@/utils/format'
 import { usePlayer } from '@/hooks/usePlayer.ts'
 
-
-defineComponent({
-  name: 'PlaylistItem',
-})
 const SongStore = useSongStore()
 const { player } = usePlayer()
 const props = defineProps(['item','index'])

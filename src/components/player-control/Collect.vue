@@ -17,17 +17,12 @@
   </div>
 </template>
 <script setup lang="ts">
-import { ref, onMounted, computed, defineComponent, onBeforeMount, watch } from 'vue'
+import { ref, onMounted, computed, onBeforeMount, watch } from 'vue'
 import mojs from '@mojs/core'
 import { useUserStore, useSongStore } from '@/stores'
 import { upCollectState } from '@/utils/songFunctions'
 import { ElMessage } from 'element-plus'
 import { throttle } from 'lodash'
-
-// 定义组件
-defineComponent({
-  name: 'Collect',
-})
 
 // 状态管理
 const UserStore = useUserStore()

@@ -19,7 +19,7 @@
 
 <script setup lang="ts">
 import { useSongStore } from '@/stores/modules/song.ts'
-import PlayerControlBar from '@/views/PlayerControlBar/index.vue'
+import PlayerControlBar from '@/components/player-control-bar/index.vue'
 import PlayListPage from '@/views/PlayListPage/index.vue'
 
 const SongStore = useSongStore()

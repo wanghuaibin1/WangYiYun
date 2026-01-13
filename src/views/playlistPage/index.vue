@@ -65,14 +65,10 @@
 </template>
 
 <script setup lang="ts">
-import { defineComponent, ref, reactive, onMounted, watch } from 'vue'
+import { ref, reactive, onMounted, watch } from 'vue'
 import { useSongStore } from '@/stores/modules/song.ts'
 
 import PlayList from './component/PlaylistItem.vue'
-
-defineComponent({
-  name: 'Playlist-index',
-})
 
 const SongStore = useSongStore()
 const loading = ref(false)

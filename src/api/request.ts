@@ -7,7 +7,7 @@ import type {
   InternalAxiosRequestConfig,
 } from 'axios'
 
-import { ref } from 'vue'
+import { ref, type Ref } from 'vue'
 
 interface HttpResponse<T = unknown> {
   loading: ref<boolean>
@@ -95,9 +95,9 @@ export class Http {
   }
 
   private async request<T>(options: AxiosRequestConfig): Promise<HttpResponse<T>> {
-    const loading: Ref<boolean> = ref(true)
-    const data: Ref<T | null> = ref(null)
-    const errMsg: Ref<string | null> = ref(null)
+    const loading = ref<boolean>(true)
+    const data = ref<T | null>(null)
+    const errMsg = ref<string | null>(null)
     try {
       const response: T = await this.instance(options)
       data.value = response

@@ -1,10 +1,7 @@
-import { useSongStore } from '@/stores/modules/song.ts'
+import type { lyric } from '@/types/player'
 
-interface lyric {
-  time: number
-  text: string
-  translate_intoChinese: string
-}
+// 重新导出类型，保持向后兼容
+export type { lyric }
 
 // 格式化歌曲总时长时间
 export function formatTime(time: number): string {
@@ -29,9 +26,7 @@ export function formatNumber(num: number): string {
 }
 
 // 格式化歌词
-export function formatLyr(lrc: string): lyric[] {
-  const SongStore = useSongStore()
-
+export function formatLyr(lrc: any, songDuration: number): lyric[] {
   //  保存解析后的歌词对象
   const lyricsArray: lyric[] = []
   const lines: string = lrc.lrc.lyric.split('\n')
@@ -57,19 +52,13 @@ export function formatLyr(lrc: string): lyric[] {
       }
     })
     lyricsArray.push({
-      time: SongStore.playList[SongStore.currentIndex].dt / 1000,
+      time: songDuration / 1000,
       text: '',
       translate_intoChinese: '',
     })
   } else {
     // 将翻译拆分
-    const translationLines = lrc.tlyric.lyric.split('\n')
-    // if (translationLines.length > 1) {
-    //   console.log('有翻译歌词')
-    //   this.pureMusic = true
-    // } else {
-    //   this.pureMusic = false
-    // }
+    const translationLines = lrc.tlyric?.lyric?.split('\n') || []
     // 解析英文歌词
     const parsedLyrics = lines
       .map((line: string): { time: number; text: string } | null => {
@@ -87,7 +76,7 @@ export function formatLyr(lrc: string): lyric[] {
         }
         return null
       })
-      .filter(Boolean)
+      .filter(Boolean) as { time: number; text: string }[]
     // 解析翻译歌词
     const parsedTranslations = translationLines
       .map((line: string): { time: number; text: string } | null => {
@@ -105,19 +94,13 @@ export function formatLyr(lrc: string): lyric[] {
         }
         return null
       })
-      .filter(Boolean)
-
-    // 定义接口类型
-    interface Lyric {
-      time: number // 时间戳
-      text: string // 歌词内容
-    }
+      .filter(Boolean) as { time: number; text: string }[]
 
     // 合并英文歌词和翻译
-    parsedLyrics.forEach((lyric: Lyric) => {
+    parsedLyrics.forEach((lyric) => {
       if (lyric) {
         // 检查 lyric 是否为 null
-        const translation = parsedTranslations.find((t: Lyric): boolean => t.time === lyric.time)
+        const translation = parsedTranslations.find((t) => t.time === lyric.time)
         lyricsArray.push({
           time: lyric.time,
           text: lyric.text,
@@ -126,7 +109,7 @@ export function formatLyr(lrc: string): lyric[] {
       }
     })
     lyricsArray.push({
-      time: SongStore.playList[SongStore.currentIndex].dt / 1000,
+      time: songDuration / 1000,
       text: '',
       translate_intoChinese: '',
     })
@@ -137,35 +120,37 @@ export function formatLyr(lrc: string): lyric[] {
 }
 
 //获取最接近当前播放时间的歌词
-export function getLyricByTime (currentTime) {
-  const SongStore = useSongStore()
-  const lyrics =SongStore.lyric;
-  let left = 0;
-  let right = lyrics.length - 1;
-  let closestLyric = '';
+export function getLyricByTime(currentTime: number, lyrics: lyric[]): lyric {
+  if (!lyrics || lyrics.length === 0) {
+    return { time: 0, text: '', translate_intoChinese: '' }
+  }
+
+  let left = 0
+  let right = lyrics.length - 1
+  let closestLyric: lyric = lyrics[0]
 
   // 使用二分查找找到最接近的歌词
   while (left <= right) {
-    const mid = Math.floor((left + right) / 2);
+    const mid = Math.floor((left + right) / 2)
 
     // 判断是否是最后一条歌词
     if (mid === lyrics.length - 1) {
-      closestLyric = lyrics[mid];
-      break;
+      closestLyric = lyrics[mid]
+      break
     }
 
     // 判断当前歌词是否处于播放时间范围内
     if (currentTime >= lyrics[mid].time && currentTime < lyrics[mid + 1].time) {
-      closestLyric = lyrics[mid];
-      break;
+      closestLyric = lyrics[mid]
+      break
     }
 
     // 如果当前时间比 mid 的时间大，往右查找
     if (lyrics[mid].time <= currentTime) {
-      left = mid + 1;
+      left = mid + 1
     } else {
-      right = mid - 1;
+      right = mid - 1
     }
   }
-  return closestLyric;
+  return closestLyric
 }

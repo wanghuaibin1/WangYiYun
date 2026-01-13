@@ -28,31 +28,44 @@
           </el-button>
         </div>
 
-        <!-- 账号登录表单 -->
+        <!-- 手机号验证码登录表单 -->
         <div v-if="loginType === 'account'" class="space-y-6">
           <el-form ref="formRef" :model="loginForm" :rules="rules" @keyup.enter="handleLogin">
-            <el-form-item prop="username">
+            <el-form-item prop="phone">
               <el-input
-                v-model="loginForm.username"
-                placeholder="请输入用户名"
-                :prefix-icon="User"
-              />
+                v-model="loginForm.phone"
+                placeholder="请输入手机号"
+                maxlength="11"
+                clearable
+              >
+                <template #prefix>
+                  <el-icon><Iphone /></el-icon>
+                </template>
+              </el-input>
             </el-form-item>
 
-            <el-form-item prop="password">
-              <el-input
-                v-model="loginForm.password"
-                type="password"
-                placeholder="请输入密码"
-                :prefix-icon="Lock"
-                show-password
-              />
+            <el-form-item prop="captcha">
+              <div class="flex gap-2">
+                <el-input
+                  v-model="loginForm.captcha"
+                  placeholder="请输入验证码"
+                  maxlength="6"
+                  clearable
+                  class="flex-1"
+                >
+                  <template #prefix>
+                    <el-icon><ChatLineRound /></el-icon>
+                  </template>
+                </el-input>
+                <el-button
+                  :disabled="!canSendCaptcha || sendingCaptcha"
+                  :loading="sendingCaptcha"
+                  @click="handleSendCaptcha"
+                >
+                  {{ captchaButtonText }}
+                </el-button>
+              </div>
             </el-form-item>
-
-            <div class="flex items-center justify-between mb-6">
-              <el-checkbox v-model="loginForm.remember">记住我</el-checkbox>
-              <el-button link type="primary" @click="handleForgotPassword"> 忘记密码？ </el-button>
-            </div>
 
             <el-button type="primary" class="w-full" :loading="loading" @click="handleLogin">
               登录
@@ -65,13 +78,13 @@
           <div class="bg-gray-50 p-6 rounded-lg inline-block">
             <div class="relative">
               <!-- 二维码/头像显示 -->
-              <template v-if="qrStatus === QRCodeStatus.Confirming && scannerInfo">
+              <template v-if="isConfirming">
                 <img
-                  :src="scannerInfo.avatarUrl"
+                  :src="scannerInfo!.avatarUrl"
                   alt="User Avatar"
                   class="w-48 h-48 rounded-full object-cover"
                 />
-                <p class="mt-2 text-gray-700 font-medium">{{ scannerInfo.nickname }}</p>
+                <p class="mt-2 text-gray-700 font-medium">{{ scannerInfo!.nickname }}</p>
               </template>
               <template v-else>
                 <img :src="qrImage" alt="QR Code" class="w-48 h-48" />
@@ -80,7 +93,7 @@
               <!-- 过期遮罩 -->
               <div
                 v-if="qrCodeExpired"
-                class="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center"
+                class="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center rounded-lg"
               >
                 <div class="text-white space-y-2">
                   <p>二维码已过期</p>
@@ -97,15 +110,13 @@
 
           <!-- 状态提示 -->
           <div class="space-y-2">
-            <template v-if="qrStatus === QRCodeStatus.Confirming && scannerInfo">
+            <template v-if="isConfirming">
               <p class="text-blue-500">请在手机上确认登录</p>
-              <p class="text-gray-500 text-sm">
-                {{ scannerInfo.nickname }}
-              </p>
+              <p class="text-gray-500 text-sm">{{ scannerInfo!.nickname }}</p>
             </template>
             <template v-else>
               <p class="text-gray-500">使用网易云音乐 App 扫码登录</p>
-              <p class="text-xs text-gray-400" v-if="qrStatus === QRCodeStatus.Waiting">
+              <p v-if="qrStatus === QRCodeStatus.Waiting" class="text-xs text-gray-400">
                 请使用 App 扫描二维码
               </p>
             </template>
@@ -125,202 +136,367 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, watch } from 'vue'
+import { ref, reactive, watch, onUnmounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import type { FormInstance, FormRules } from 'element-plus'
 import { ElMessage } from 'element-plus'
-import { loginAPI,UserAPI } from '@/api'
-import { QRCodeStatus } from '@/api/auth'
+import { loginAPI, UserAPI } from '@/api'
+import { QRCodeStatus, type QRCheckResponse } from '@/types/api'
 
+// ==================== 常量定义 ====================
+const QR_CHECK_INTERVAL = 2000 // 二维码状态检查间隔（毫秒）
+const SUCCESS_CODE = 200 // 成功状态码
+
+// ==================== 类型定义 ====================
+interface ScannerInfo {
+  nickname: string
+  avatarUrl: string
+}
+
+type LoginType = 'account' | 'qrcode'
+
+// ==================== 响应式数据 ====================
 const router = useRouter()
 const formRef = ref<FormInstance>()
 const loading = ref(false)
-const loginType = ref<'account' | 'qrcode'>('account')
+const loginType = ref<LoginType>('account')
 const qrCodeExpired = ref(false)
 
 // 登录表单
 const loginForm = reactive({
-  username: '',
-  password: '',
-  remember: false,
+  phone: '',
+  captcha: '',
 })
 
-// 表单验证规则
-const rules = reactive<FormRules>({
-  username: [
-    { required: true, message: '请输入用户名', trigger: 'blur' },
-    { min: 3, message: '用户名长度不能小于3位', trigger: 'blur' },
-  ],
-  password: [
-    { required: true, message: '请输入密码', trigger: 'blur' },
-    { min: 6, message: '密码长度不能小于6位', trigger: 'blur' },
-  ],
-})
-
-// 处理登录
-const handleLogin = async () => {
-  if (!formRef.value) return
-
-  await formRef.value.validate(async (valid) => {
-    if (valid) {
-      loading.value = true
-      try {
-        let res
-        if (loginForm.username.includes('@')) {
-          // 邮箱登录
-          res = await loginAPI.loginByEmail(loginForm.username, loginForm.password)
-        } else {
-          // 手机号登录
-          res = await loginAPI.loginByPhone(loginForm.username, loginForm.password)
-        }
-
-        if (res.code === 200) {
-          // 保存登录凭证
-          if (res.cookie) {
-            localStorage.setItem('Cookie', res.cookie)
-          }
-          ElMessage.success('登录成功')
-          router.push('/')
-        } else {
-          ElMessage.error(res.message || '登录失败')
-        }
-      } catch (error) {
-        ElMessage.error('登录失败')
-      } finally {
-        loading.value = false
-      }
-    }
-  })
-}
-
-// 处理忘记密码
-const handleForgotPassword = () => {
-  ElMessage.info('忘记密码功能开发中...')
-}
+// 验证码相关状态
+const sendingCaptcha = ref(false)
+const countdown = ref(0)
+const countdownTimer = ref<ReturnType<typeof setInterval> | null>(null)
 
 // 二维码登录相关状态
 const qrKey = ref('')
 const qrImage = ref('')
 const qrUrl = ref('')
 const qrStatus = ref<QRCodeStatus>(QRCodeStatus.Waiting)
-const qrCheckTimer = ref<number>()
-
-// 扫码用户信息
-interface ScannerInfo {
-  nickname: string
-  avatarUrl: string
-}
-
+const qrCheckTimer = ref<ReturnType<typeof setInterval> | null>(null)
 const scannerInfo = ref<ScannerInfo | null>(null)
 
-// 初始化二维码
-const initQRCode = async () => {
-  try {
-    // 获取二维码 key
-    const { data: keyRes } = await loginAPI.getQRKey()
-    if (keyRes.value.code === 200) {
-      qrKey.value = keyRes.value.data.unikey
-      // 生成二维码
-      const { data: qrRes } = await loginAPI.createQRCode(qrKey.value)
-      if (qrRes.value.code === 200) {
-        console.log(qrRes.value)
-        qrImage.value = qrRes.value.data.qrimg
-        qrUrl.value = qrRes.value.data.qrurl
-        qrStatus.value = QRCodeStatus.Waiting
-        qrCodeExpired.value = false
-        startQRCheck()
-      }
-    }
-  } catch (error) {
-    ElMessage.error('获取二维码失败',error)
-  }
-}
+// ==================== 表单验证规则 ====================
+const rules = reactive<FormRules>({
+  phone: [
+    { required: true, message: '请输入手机号', trigger: 'blur' },
+    {
+      pattern: /^1[3-9]\d{9}$/,
+      message: '请输入正确的手机号',
+      trigger: 'blur',
+    },
+  ],
+  captcha: [
+    { required: true, message: '请输入验证码', trigger: 'blur' },
+    {
+      pattern: /^\d{4,6}$/,
+      message: '验证码为4-6位数字',
+      trigger: 'blur',
+    },
+  ],
+})
 
-// 开始轮询检查二维码状态
-const startQRCheck = () => {
+// ==================== 计算属性 ====================
+const isConfirming = computed(
+  () => qrStatus.value === QRCodeStatus.Confirming && scannerInfo.value !== null,
+)
+
+/**
+ * 是否可以发送验证码
+ */
+const canSendCaptcha = computed(() => {
+  return /^1[3-9]\d{9}$/.test(loginForm.phone) && countdown.value === 0
+})
+
+/**
+ * 验证码按钮文本
+ */
+const captchaButtonText = computed(() => {
+  if (countdown.value > 0) {
+    return `${countdown.value}秒后重试`
+  }
+  return '发送验证码'
+})
+
+// ==================== 工具函数 ====================
+/**
+ * 清理二维码检查定时器
+ */
+const clearQRCheckTimer = () => {
   if (qrCheckTimer.value) {
     clearInterval(qrCheckTimer.value)
+    qrCheckTimer.value = null
   }
-  qrCheckTimer.value = window.setInterval(async () => {
-    try {
-      const { data:res } = await loginAPI.checkQRStatus(qrKey.value)
-        qrStatus.value =  res.value.code
-        switch (qrStatus.value) {
-          case QRCodeStatus.Expired:
-            ElMessage.warning('二维码已过期，请刷新重试')
-            qrCodeExpired.value = true
-            scannerInfo.value = null
-            clearInterval(qrCheckTimer.value)
-            break
-
-          case QRCodeStatus.Waiting:
-            scannerInfo.value = null
-            break
-
-          case QRCodeStatus.Confirming:
-            if (res.value.nickname && res.value.avatarUrl) {
-              scannerInfo.value = {
-                nickname: res.value.nickname,
-                avatarUrl: res.value.avatarUrl,
-              }
-            }
-            break
-
-          case QRCodeStatus.Success:
-            ElMessage.success(res.value.message)
-            clearInterval(qrCheckTimer.value)
-            if (res.value.cookie) {
-              console.log(res.value.cookie)
-              document.cookie = res.value.cookie;
-              const { data:Status } = await loginAPI.RefreshLoginStatus(res.value.cookie)
-              const { data:UserInfo } = await UserAPI.getUserInfo(Status.value.data.account.id)
-              // 保存登录凭证
-              localStorage.setItem('UserInfo', JSON.stringify(UserInfo.value));
-              localStorage.setItem('Cookie', res.value.cookie)
-              router.push({ path: '/' });
-            }
-            break
-
-          default:
-            if (res.message) {
-              ElMessage.error(res.message)
-            }
-        }
-    } catch (error) {
-      clearInterval(qrCheckTimer.value)
-      ElMessage.error('检查二维码状态失败',error)
-    }
-  }, 2000)
 }
 
-// 刷新二维码时清除扫码信息
-const refreshQRCode = () => {
+/**
+ * 重置二维码状态
+ */
+const resetQRState = () => {
   qrCodeExpired.value = false
   scannerInfo.value = null
+  qrStatus.value = QRCodeStatus.Waiting
+}
+
+/**
+ * 保存登录凭证
+ */
+const saveLoginCredentials = (cookie: string, userInfo?: any) => {
+  localStorage.setItem('Cookie', cookie)
+  if (userInfo) {
+    localStorage.setItem('UserInfo', JSON.stringify(userInfo))
+  }
+}
+
+/**
+ * 处理登录成功后的操作
+ */
+const handleLoginSuccess = async (cookie: string) => {
+  try {
+    document.cookie = cookie
+    const { data: statusRes } = await loginAPI.RefreshLoginStatus(cookie)
+    const accountId = statusRes.value.data?.account?.id
+
+    if (accountId) {
+      const { data: userInfoRes } = await UserAPI.getUserInfo(accountId)
+      saveLoginCredentials(cookie, userInfoRes.value)
+    } else {
+      saveLoginCredentials(cookie)
+    }
+
+    ElMessage.success('登录成功')
+    router.push('/')
+  } catch (error) {
+    console.error('保存登录信息失败:', error)
+    ElMessage.error('登录成功，但保存信息失败')
+  }
+}
+
+// ==================== 手机号验证码登录相关 ====================
+/**
+ * 清理倒计时定时器
+ */
+const clearCountdownTimer = () => {
+  if (countdownTimer.value) {
+    clearInterval(countdownTimer.value)
+    countdownTimer.value = null
+  }
+}
+
+/**
+ * 开始倒计时
+ */
+const startCountdown = () => {
+  clearCountdownTimer()
+  countdown.value = 60
+  countdownTimer.value = setInterval(() => {
+    countdown.value--
+    if (countdown.value <= 0) {
+      clearCountdownTimer()
+    }
+  }, 1000)
+}
+
+/**
+ * 发送验证码
+ */
+const handleSendCaptcha = async () => {
+  if (!canSendCaptcha.value) return
+
+  // 验证手机号格式
+  if (!/^1[3-9]\d{9}$/.test(loginForm.phone)) {
+    ElMessage.warning('请输入正确的手机号')
+    return
+  }
+
+  sendingCaptcha.value = true
+  try {
+    const { data: res } = await loginAPI.sendCaptcha(loginForm.phone)
+    if (res.value.code === SUCCESS_CODE) {
+      ElMessage.success('验证码已发送，请查收')
+      startCountdown()
+    } else {
+      ElMessage.error(res.value.message || '发送验证码失败，请稍后重试')
+    }
+  } catch (error) {
+    console.error('发送验证码失败:', error)
+    ElMessage.error('发送验证码失败，请稍后重试')
+  } finally {
+    sendingCaptcha.value = false
+  }
+}
+
+/**
+ * 处理手机号验证码登录
+ */
+const handleLogin = async () => {
+  if (!formRef.value) return
+
+  await formRef.value.validate(async (valid) => {
+    if (!valid) return
+
+    loading.value = true
+    try {
+      const res = await loginAPI.loginByPhoneWithCaptcha(loginForm.phone, loginForm.captcha)
+
+      if (res.code === SUCCESS_CODE && res.cookie) {
+        await handleLoginSuccess(res.cookie)
+      } else {
+        ElMessage.error(res.message || '登录失败，检测到您的网络环境存在风险，请稍后再试')
+      }
+    } catch (error) {
+      console.error('登录失败:', error)
+      ElMessage.error('登录失败，请稍后重试')
+    } finally {
+      loading.value = false
+    }
+  })
+}
+
+// ==================== 二维码登录相关 ====================
+/**
+ * 处理二维码状态变化
+ */
+const handleQRStatusChange = async (response: QRCheckResponse) => {
+  qrStatus.value = response.code
+
+  switch (response.code) {
+    case QRCodeStatus.Expired:
+      ElMessage.warning('二维码已过期，请刷新重试')
+      qrCodeExpired.value = true
+      scannerInfo.value = null
+      clearQRCheckTimer()
+      break
+
+    case QRCodeStatus.Waiting:
+      scannerInfo.value = null
+      break
+
+    case QRCodeStatus.Confirming:
+      if (response.nickname && response.avatarUrl) {
+        scannerInfo.value = {
+          nickname: response.nickname,
+          avatarUrl: response.avatarUrl,
+        }
+      }
+      break
+
+    case QRCodeStatus.Success:
+      clearQRCheckTimer()
+      if (response.cookie) {
+        await handleLoginSuccess(response.cookie)
+      } else {
+        ElMessage.error('登录失败，未获取到登录凭证')
+      }
+      break
+
+    default:
+      if (response.message) {
+        ElMessage.error(response.message)
+      }
+  }
+}
+
+/**
+ * 开始轮询检查二维码状态
+ */
+const startQRCheck = () => {
+  clearQRCheckTimer()
+
+  qrCheckTimer.value = setInterval(async () => {
+    if (!qrKey.value) {
+      clearQRCheckTimer()
+      return
+    }
+
+    try {
+      const { data: res } = await loginAPI.checkQRStatus(qrKey.value)
+      await handleQRStatusChange(res.value)
+    } catch (error) {
+      console.error('检查二维码状态失败:', error)
+      ElMessage.error('检查二维码状态失败')
+      clearQRCheckTimer()
+    }
+  }, QR_CHECK_INTERVAL)
+}
+
+/**
+ * 初始化二维码
+ */
+const initQRCode = async () => {
+  try {
+    resetQRState()
+
+    // 获取二维码 key
+    const { data: keyRes } = await loginAPI.getQRKey()
+    if (keyRes.value.code !== SUCCESS_CODE || !keyRes.value.data?.unikey) {
+      ElMessage.error('获取二维码密钥失败')
+      return
+    }
+
+    qrKey.value = keyRes.value.data.unikey
+
+    // 生成二维码
+    const { data: qrRes } = await loginAPI.createQRCode(qrKey.value)
+    if (qrRes.value.code !== SUCCESS_CODE || !qrRes.value.data) {
+      ElMessage.error('生成二维码失败')
+      return
+    }
+
+    qrImage.value = qrRes.value.data.qrimg
+    qrUrl.value = qrRes.value.data.qrurl
+    qrStatus.value = QRCodeStatus.Waiting
+    startQRCheck()
+  } catch (error) {
+    console.error('初始化二维码失败:', error)
+    ElMessage.error('获取二维码失败，请稍后重试')
+  }
+}
+
+/**
+ * 刷新二维码
+ */
+const refreshQRCode = () => {
+  resetQRState()
   initQRCode()
 }
 
+// ==================== 其他功能 ====================
+/**
+ * 帮助中心
+ */
+const handleHelp = () => {
+  window.open('/help', '_blank')
+}
+
+/**
+ * 联系客服
+ */
+const handleCustomerService = () => {
+  ElMessage.info('正在接入客服...')
+}
+
+// ==================== 生命周期和监听器 ====================
 // 切换登录方式时清除扫码信息
 watch(loginType, (newType) => {
   if (newType === 'qrcode') {
     initQRCode()
   } else {
-    scannerInfo.value = null
-    if (qrCheckTimer.value) {
-      clearInterval(qrCheckTimer.value)
-    }
+    resetQRState()
+    clearQRCheckTimer()
   }
 })
 
-// 帮助中心
-const handleHelp = () => {
-  window.open('/help', '_blank')
-}
-
-// 联系客服
-const handleCustomerService = () => {
-  ElMessage.success('正在接入客服...')
-}
+// 组件卸载时清理定时器
+onUnmounted(() => {
+  clearQRCheckTimer()
+  clearCountdownTimer()
+})
 </script>
 
 <style scoped>

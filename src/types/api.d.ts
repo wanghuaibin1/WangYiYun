@@ -15,24 +15,28 @@ export interface LoginResponse {
 }
 
 export interface QRKeyResponse {
-  code: number
-  data: {
-    unikey: string
-  }
+  unikey: string
 }
 
 export interface QRImageResponse {
-  code: number
-  data: {
-    qrimg: string
-    qrurl: string
-  }
+  qrimg: string
+  qrurl: string
+}
+
+// 二维码状态码
+export enum QRCodeStatus {
+  Expired = 800,    // 二维码已过期
+  Waiting = 801,    // 等待扫码
+  Confirming = 802, // 待确认
+  Success = 803     // 授权登录成功
 }
 
 export interface QRCheckResponse {
-  code: number
+  code: QRCodeStatus
   message?: string
   cookie?: string
+  nickname?: string
+  avatarUrl?: string
 }
 
 // 用户相关

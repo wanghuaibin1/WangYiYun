@@ -5,7 +5,7 @@ import { UserAPI } from '@/api'
 export const useUserStore = defineStore('user', {
   state: () => ({
     cookie: storage.get(STORAGE_KEY.COOKIE) || null,
-    UserInfo: storage.get('user') || null,
+    UserInfo: storage.get(STORAGE_KEY.USER_INFO) || null,
     likeList: [] as number[],
   }),
 

@@ -20,12 +20,7 @@
     </div>
 </template>
 <script setup lang="ts">
-import { defineComponent } from 'vue'
 import { useSongStore } from '@/stores/modules/song.ts'
-
-defineComponent({
-  name: 'VolumeControl',
-})
 
 const SongStore = useSongStore()
 </script>
