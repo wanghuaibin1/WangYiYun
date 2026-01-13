@@ -18,12 +18,12 @@ export const routes: RouteRecordRaw[] = [
         component: () => import('@/views/home/index.vue'),
         meta: { requiresAuth: true },
       },
-      // {
-      //   path: 'play',
-      //   name: 'play',
-      //   component: () => import('@/views/player/Detail.vue'),
-      //   meta: { requiresAuth: true },
-      // },
+      {
+        path: 'play',
+        name: 'play',
+        component: () => import('@/views/play-page/index.vue'),
+        meta: { requiresAuth: true },
+      },
       // {
       //   path: 'playlist',
       //   name: 'playlist',

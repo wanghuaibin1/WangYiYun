@@ -240,7 +240,121 @@ export const useSongStore = defineStore('song', {
         rurl: null,
         publishTime: 0,
       },
-    ] as Song[],
+      {
+        al: {
+          picUrl: 'https://p1.music.126.net/wYuFxK1i_5jqs58xXQ-Jfg==/109951167350445378.jpg'
+        },
+        ar: [
+          { name: 'LBI利比' }
+        ],
+        dt: 173382,
+        name: '小城夏天',
+        id: 1934251776,
+        fee: 8
+      },
+      {
+        "name": "罗生门（Follow）",
+        "mainTitle": "罗生门",
+        "additionalTitle": "（Follow）",
+        "id": 1456890009,
+        "pst": 0,
+        "t": 0,
+        "ar": [
+          {
+            "id": 33259235,
+            "name": "梨冻紧",
+            "tns": [],
+            "alias": []
+          },
+          {
+            "id": 13112601,
+            "name": "Wiz_H张子豪",
+            "tns": [],
+            "alias": []
+          }
+        ],
+        "alia": [],
+        "pop": 100,
+        "st": 0,
+        "rt": "",
+        "fee": 8,
+        "v": 73,
+        "crbt": null,
+        "cf": "",
+        "al": {
+          "id": 91237927,
+          "name": "罗生门（Follow）",
+          "picUrl": "https://p3.music.126.net/yN1ke1xYMJ718FiHaDWtYQ==/109951165076380471.jpg",
+          "tns": [],
+          "pic_str": "109951165076380471",
+          "pic": 109951165076380460
+        },
+        "dt": 243754,
+        "h": {
+          "br": 320000,
+          "fid": 0,
+          "size": 9752735,
+          "vd": -48129,
+          "sr": 48000
+        },
+        "m": {
+          "br": 192000,
+          "fid": 0,
+          "size": 5851679,
+          "vd": -45527,
+          "sr": 48000
+        },
+        "l": {
+          "br": 128000,
+          "fid": 0,
+          "size": 3901151,
+          "vd": -43878,
+          "sr": 48000
+        },
+        "sq": {
+          "br": 922449,
+          "fid": 0,
+          "size": 28106454,
+          "vd": -48126,
+          "sr": 48000
+        },
+        "hr": {
+          "br": 1692069,
+          "fid": 0,
+          "size": 51556278,
+          "vd": -48120,
+          "sr": 48000
+        },
+        "a": null,
+        "cd": "01",
+        "no": 1,
+        "rtUrl": null,
+        "ftype": 0,
+        "rtUrls": [],
+        "djId": 0,
+        "copyright": 0,
+        "s_id": 0,
+        "mark": 17716748352,
+        "originCoverType": 1,
+        "originSongSimpleData": null,
+        "tagPicList": null,
+        "resourceState": true,
+        "version": 39,
+        "songJumpInfo": null,
+        "entertainmentTags": null,
+        "awardTags": null,
+        "displayTags": null,
+        "markTags": [],
+        "single": 0,
+        "noCopyrightRcmd": null,
+        "mv": 0,
+        "rtype": 0,
+        "rurl": null,
+        "mst": 9,
+        "cp": 0,
+        "publishTime": 0
+      }
+    ],
     //播放状态
     playStatus: false as boolean,
     //当前播放歌曲的索引

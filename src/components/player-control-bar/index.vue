@@ -9,7 +9,7 @@
         style="animation-fill-mode: forwards"
         class="w-14 h-14 cursor-pointer rounded-full hover:scale-110 ease-linear"
         :class="albumClass"
-        @click="SongStore.songDetailsDisplay = !SongStore.songDetailsDisplay"
+        @click="goToPlayPage"
       />
       <!-- 歌曲和艺术家信息 -->
       <div>
@@ -69,26 +69,23 @@
 </template>
 
 <script setup lang="ts">
-import {
-  computed,
-  ref,
-  onMounted,
-  onBeforeMount,
-  watch,
-  onBeforeUnmount,
-} from 'vue'
+import { computed, ref, onMounted, onBeforeMount, watch, onBeforeUnmount } from 'vue'
 import { useSongStore } from '@/stores/modules/song.ts'
 import { usePlayer } from '@/hooks/usePlayer.ts'
 import { getLyricByTime, formatProgress } from '@/utils/format.ts'
 import VolumeControl from '@/components/player-control/VolumeControl.vue'
 import PlaybackControls from '@/components/player-control/PlaybackControls.vue'
 import ProgressBar from '@/components/player-control/ProgressBar.vue'
-
 const SongStore = useSongStore()
 const { player } = usePlayer()
 const audio = ref<HTMLAudioElement>()
 const parentRef = ref()
 const progressBarRef = ref()
+
+// 打开全屏播放详情页（不切路由）
+const goToPlayPage = () => {
+  SongStore.songDetailsDisplay = true
+}
 
 const albumClass = computed(() => ({
   'animate-[wiggle_10s_linear_infinite]': SongStore.playStatus,
