@@ -129,8 +129,9 @@ watch(
     if (audio.value) {
       // 重置音频播放位置
       audio.value.currentTime = 0
+      // 明确设置 autoplay 属性，确保遵循当前播放状态
+      audio.value.autoplay = SongStore.playStatus
       if (SongStore.playStatus) {
-        audio.value.autoplay = true
         // 播放状态为 true，播放音频
         audio.value.play().catch((error) => console.error('播放失败:', error))
       } else {
