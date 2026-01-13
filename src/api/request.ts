@@ -15,6 +15,8 @@ interface HttpResponse<T = unknown> {
   errMsg: ref<string | null>
 }
 
+type HttpOptions = Omit<AxiosRequestConfig, 'url' | 'method' | 'params' | 'data'>
+
 export class Http {
   private instance: AxiosInstance
 
@@ -116,13 +118,18 @@ export class Http {
   }
 }
 
-function errTip(error: AxiosError, msg = '未知错误'): void {
-  const tip: { [key: number]: string } = {
+/**
+ * 错误提示处理函数
+ * @param error - Axios 错误对象
+ */
+function errTip(error: AxiosError): void {
+  const status = error.response?.status
+  const errorMessages: Record<number, string> = {
     400: '请求错误',
     401: '未授权，请登录',
     403: '拒绝访问',
-    404: `请求地址出错${error.response?.config?.url || ''}`,
-    405: `请求方式不允许`,
+    404: `请求地址出错: ${error.response?.config?.url || ''}`,
+    405: '请求方式不允许',
     408: '请求超时',
     500: '服务器内部错误',
     501: '服务未实现',
@@ -131,7 +138,8 @@ function errTip(error: AxiosError, msg = '未知错误'): void {
     504: '网关超时',
     505: 'HTTP版本不受支持',
   }
-  console.log(tip[error.response?.status || 0] || msg)
+  const message = status && errorMessages[status] ? errorMessages[status] : error.message || '未知错误'
+  console.error('[HTTP Error]', message, error)
 }
 
 export default new Http()

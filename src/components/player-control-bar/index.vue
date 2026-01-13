@@ -121,10 +121,14 @@ watch(
 watch(
   () => SongStore.currentSong,
   () => {
-    // 重置播放进度条
+    // 重置播放进度条和相关状态
     SongStore.playProgressBarRate = 0
+    SongStore.currentTime = 0
+    SongStore.formatCurrentTime = '00:00'
     // 确保 audio 已定义，并根据播放状态进行控制
     if (audio.value) {
+      // 重置音频播放位置
+      audio.value.currentTime = 0
       if (SongStore.playStatus) {
         audio.value.autoplay = true
         // 播放状态为 true，播放音频

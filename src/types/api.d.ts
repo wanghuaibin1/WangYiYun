@@ -70,4 +70,5 @@ export interface LyricResponse {
     version: number
     lyric: string
   }
+  pureMusic?: boolean // 是否为纯音乐
 }

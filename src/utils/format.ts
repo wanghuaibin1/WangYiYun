@@ -1,4 +1,5 @@
 import type { lyric } from '@/types/player'
+import type { LyricResponse } from '@/types/api'
 
 // 重新导出类型，保持向后兼容
 export type { lyric }
@@ -12,21 +13,21 @@ export function formatTime(time: number): string {
 
 // 格式化歌曲播放进度
 export function formatProgress(currentTime: number): string {
-  let m = parseInt(currentTime / 60)
-  let s = parseInt(currentTime % 60)
-  m = m >= 10 ? m : (m = '0' + m)
-  s = s >= 10 ? s : (s = '0' + s)
-  return `${m}:${s}`
+  const m = Math.floor(currentTime / 60)
+  const s = Math.floor(currentTime % 60)
+  const formattedM = m >= 10 ? m.toString() : `0${m}`
+  const formattedS = s >= 10 ? s.toString() : `0${s}`
+  return `${formattedM}:${formattedS}`
 }
 
 // 格式化数字
 export function formatNumber(num: number): string {
-  if (num < 10000) return num
+  if (num < 10000) return num.toString()
   return Math.floor(num / 10000) + '万'
 }
 
 // 格式化歌词
-export function formatLyr(lrc: any, songDuration: number): lyric[] {
+export function formatLyr(lrc: LyricResponse, songDuration: number): lyric[] {
   //  保存解析后的歌词对象
   const lyricsArray: lyric[] = []
   const lines: string = lrc.lrc.lyric.split('\n')
@@ -86,7 +87,7 @@ export function formatLyr(lrc: any, songDuration: number): lyric[] {
           const minutes = parseInt(matches[1], 10) // 提取分钟部分
           const seconds = parseFloat(matches[2])
           const timeInSeconds = minutes * 60 + seconds
-          const content = line.replace(/\[.*?/g, '').trim() // 去除所有时间戳得到歌词内容
+          const content = line.replace(/\[.*?\]/g, '').trim() // 去除所有时间戳得到歌词内容
           // 检查歌词内容是否为空
           if (content) {
             return { time: Number(timeInSeconds.toFixed(2)), text: content }

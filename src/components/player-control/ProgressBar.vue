@@ -30,6 +30,15 @@ const emit = defineEmits(['updateData'])
 const maxTime = computed(() => SongStore.currentSong.dt / 1000)
 const localRate = ref(0)
 
+// 监听歌曲变化，重置进度条
+watch(
+  () => SongStore.currentSong.id,
+  () => {
+    localRate.value = 0
+    progressBackground()
+  },
+)
+
 // 双向绑定 localRate 和 SongStore.currentTime
 watch(
   () => SongStore.currentTime,
