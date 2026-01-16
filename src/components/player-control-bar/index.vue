@@ -2,15 +2,40 @@
   <div class="bg-gray-800 py-2 text-white px-4 w-full h-full flex items-center justify-between">
     <!-- 左侧部分: 歌曲信息 -->
     <div class="flex w-1/3 items-center space-x-4 opacity-0 sm:opacity-100">
-      <!-- 专辑图片 -->
-      <img
-        :src="SongStore.currentSong.al.picUrl"
-        alt="专辑封面"
-        style="animation-fill-mode: forwards"
-        class="w-14 h-14 cursor-pointer rounded-full hover:scale-110 ease-linear"
-        :class="albumClass"
+      <!-- 专辑图片或退出图标 -->
+      <div
+        v-if="!SongStore.songDetailsDisplay"
+        class="w-14 h-14 cursor-pointer rounded-full hover:scale-110 ease-linear flex items-center justify-center"
         @click="goToPlayPage"
-      />
+      >
+        <img
+          :src="SongStore.currentSong.al.picUrl"
+          alt="专辑封面"
+          class="w-14 h-14 rounded-full"
+          :style="{ transform: `rotate(${rotationAngle}deg)` }"
+        />
+      </div>
+      <!-- 退出图标 -->
+      <div
+        v-else
+        class="w-14 h-14 cursor-pointer rounded-full hover:scale-110 ease-linear flex items-center justify-center bg-gray-700 hover:bg-gray-600 transition-colors"
+        @click="exitPlayPage"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="w-7 h-7 text-white"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M6 18L18 6M6 6l12 12"
+          />
+        </svg>
+      </div>
       <!-- 歌曲和艺术家信息 -->
       <div>
         <p
@@ -24,12 +49,20 @@
           "
         >
           {{
-            SongStore.currentTime === 0
+            SongStore.songDetailsDisplay
               ? SongStore.currentSong.name
-              : SongStore.currentTimeLyric.text
+              : SongStore.currentTime === 0
+                ? SongStore.currentSong.name
+                : SongStore.currentTimeLyric.text
           }}
         </p>
-        <p class="text-xs mt-2 text-gray-400">{{ SongStore.currentSong.name }}</p>
+        <p class="text-xs mt-2 text-gray-400">
+          {{
+            SongStore.songDetailsDisplay
+              ? artistsName
+              : SongStore.currentSong.name
+          }}
+        </p>
       </div>
     </div>
 
@@ -82,14 +115,44 @@ const audio = ref<HTMLAudioElement>()
 const parentRef = ref()
 const progressBarRef = ref()
 
+// 旋转角度状态
+const rotationAngle = ref(0)
+let animationFrameId: number | null = null
+const rotationSpeed = 0.3 // 每帧旋转角度（度），20秒一圈 = 360度 / (20秒 * 60fps) ≈ 0.3度/帧
+
 // 打开全屏播放详情页（不切路由）
 const goToPlayPage = () => {
   SongStore.songDetailsDisplay = true
 }
 
-const albumClass = computed(() => ({
-  'animate-[wiggle_10s_linear_infinite]': SongStore.playStatus,
-}))
+// 退出播放详情页
+const exitPlayPage = () => {
+  SongStore.songDetailsDisplay = false
+}
+
+// 计算艺术家名称
+const artistsName = computed(() => {
+  if (!SongStore.currentSong.ar || SongStore.currentSong.ar.length === 0) {
+    return '未知艺术家'
+  }
+  return SongStore.currentSong.ar.map(artist => artist.name).join(' / ')
+})
+
+// 旋转动画函数
+const rotateCover = () => {
+  if (SongStore.playStatus) {
+    rotationAngle.value += rotationSpeed
+    animationFrameId = requestAnimationFrame(rotateCover)
+  }
+}
+
+// 停止旋转动画（但保持当前角度）
+const stopRotation = () => {
+  if (animationFrameId !== null) {
+    cancelAnimationFrame(animationFrameId)
+    animationFrameId = null
+  }
+}
 // 监听播放状态
 watch(
   () => SongStore.playStatus,
@@ -113,6 +176,11 @@ watch(
       // 暂停音频
       audio.value.pause()
     }
+    // 控制封面旋转
+    stopRotation()
+    if (newVal) {
+      rotateCover()
+    }
   },
 )
 watch(
@@ -122,6 +190,8 @@ watch(
     SongStore.playProgressBarRate = 0
     SongStore.currentTime = 0
     SongStore.formatCurrentTime = '00:00'
+    // 重置旋转角度
+    rotationAngle.value = 0
     // 确保 audio 已定义，并根据播放状态进行控制
     if (audio.value) {
       // 重置音频播放位置
@@ -176,10 +246,16 @@ onMounted(async () => {
   audio.value.addEventListener('timeupdate', handleTimeUpdate)
   audio.value.addEventListener('ended', handleEnded)
 
+  // 组件挂载时，如果正在播放则开始旋转
+  if (SongStore.playStatus) {
+    rotateCover()
+  }
+
   // 存储事件监听器，方便清理
   onBeforeUnmount(() => {
     audio.value.removeEventListener('timeupdate', handleTimeUpdate)
     audio.value.removeEventListener('ended', handleEnded)
+    stopRotation()
   })
 })
 </script>

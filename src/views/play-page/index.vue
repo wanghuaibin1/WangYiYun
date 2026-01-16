@@ -12,9 +12,8 @@
           <img
             :src="SongStore.currentSong.al?.picUrl || ''"
             alt="专辑封面"
-            class="w-72 h-72 rounded-2xl shadow-2xl object-cover"
-            :class="{ 'animate-spin': SongStore.playStatus }"
-            style="animation-duration: 20s;"
+            class="w-72 h-72 rounded-full shadow-2xl object-cover"
+            :style="{ transform: `rotate(${rotationAngle}deg)` }"
           />
         </div>
 
@@ -80,13 +79,16 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useSongStore } from '@/stores/modules/song.ts'
 
 const SongStore = useSongStore()
 const lyricListRef = ref<HTMLElement | null>(null)
 const lyricRefs = ref<HTMLElement[]>([])
 const topPadding = ref(0)
+const rotationAngle = ref(0)
+let animationFrameId: number | null = null
+const rotationSpeed = 0.3 // 每帧旋转角度（度），20秒一圈 = 360度 / (20秒 * 60fps) ≈ 0.3度/帧
 
 // 使用浏览器原生平滑滚动，避免自定义动画可能带来的卡顿/抖动
 const smoothScrollTo = (container: HTMLElement, to: number) => {
@@ -123,6 +125,42 @@ const isCurrentLyric = (lyric: { time: number; text: string }) => {
   const current = SongStore.currentTimeLyric
   return current && current.time === lyric.time && current.text === lyric.text
 }
+
+// 旋转动画函数
+const rotateCover = () => {
+  if (SongStore.playStatus) {
+    rotationAngle.value += rotationSpeed
+    animationFrameId = requestAnimationFrame(rotateCover)
+  }
+}
+
+// 停止旋转动画（但保持当前角度）
+const stopRotation = () => {
+  if (animationFrameId !== null) {
+    cancelAnimationFrame(animationFrameId)
+    animationFrameId = null
+  }
+}
+
+// 监听播放状态，控制旋转
+watch(
+  () => SongStore.playStatus,
+  (newVal) => {
+    stopRotation()
+    if (newVal) {
+      rotateCover()
+    }
+    // 暂停时不重置角度，保持当前角度
+  }
+)
+
+// 监听当前歌曲变化，重置旋转角度
+watch(
+  () => SongStore.currentSong,
+  () => {
+    rotationAngle.value = 0
+  }
+)
 
 // 歌词加载/切歌时，让第一句歌词静态居中（即使还没开始播放）
 watch(
@@ -171,6 +209,17 @@ watch(
   },
   { immediate: true }
 )
+
+onMounted(() => {
+  // 组件挂载时，如果正在播放则开始旋转
+  if (SongStore.playStatus) {
+    rotateCover()
+  }
+})
+
+onBeforeUnmount(() => {
+  stopRotation()
+})
 </script>
 
 <style scoped>
