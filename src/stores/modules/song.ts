@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import type { Song, PlayMode, lyric } from '@/types/player'
 import { usePlayer } from '@/hooks/usePlayer.ts'
+import { formatProgress } from '@/utils/format.ts'
 
 // 播放模式图标 SVG 常量
 const PLAY_MODE_ICONS = {
@@ -393,6 +394,8 @@ export const useSongStore = defineStore('song', {
     playListDisplay: false,
     // 收藏状态
     hearted: false,
+    // 是否需要同步音频播放时间（用于外部跳转）
+    shouldSyncAudioTime: false,
   }),
 
   getters: {
@@ -522,6 +525,17 @@ export const useSongStore = defineStore('song', {
       this.formatCurrentTime = '00:00'
       this.playProgressBarRate = 0
       this.duration = 0
+    },
+
+    /**
+     * 跳转到指定时间播放
+     * @param time - 要跳转的时间（秒）
+     */
+    seekToTime(time: number): void {
+      this.currentTime = time
+      this.formatCurrentTime = formatProgress(time)
+      this.playProgressBarRate = time
+      this.shouldSyncAudioTime = true
     },
   },
 })

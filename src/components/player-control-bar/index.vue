@@ -8,9 +8,9 @@
         class="w-14 h-14 cursor-pointer rounded-full hover:scale-110 ease-linear flex items-center justify-center"
         @click="goToPlayPage"
       >
-        <img
-          :src="SongStore.currentSong.al.picUrl"
-          alt="专辑封面"
+      <img
+        :src="SongStore.currentSong.al.picUrl"
+        alt="专辑封面"
           class="w-14 h-14 rounded-full"
           :style="{ transform: `rotate(${rotationAngle}deg)` }"
         />
@@ -33,7 +33,7 @@
             stroke-linecap="round"
             stroke-linejoin="round"
             d="M6 18L18 6M6 6l12 12"
-          />
+      />
         </svg>
       </div>
       <!-- 歌曲和艺术家信息 -->
@@ -52,8 +52,8 @@
             SongStore.songDetailsDisplay
               ? SongStore.currentSong.name
               : SongStore.currentTime === 0
-                ? SongStore.currentSong.name
-                : SongStore.currentTimeLyric.text
+              ? SongStore.currentSong.name
+              : SongStore.currentTimeLyric.text
           }}
         </p>
         <p class="text-xs mt-2 text-gray-400">
@@ -218,6 +218,44 @@ watch(
 const handleUpdate = (data) => {
   audio.value.currentTime = data.currentTime
 }
+
+// 标记是否正在更新音频（避免循环更新）
+let isUpdatingAudio = false
+
+// 监听 currentTime 的变化，如果是从外部设置的（比如从歌词跳转），更新音频
+watch(
+  () => SongStore.currentTime,
+  (newTime) => {
+    if (!audio.value || isUpdatingAudio) return
+    // 检查是否是用户通过进度条拖动的（通过检查 audio 的 currentTime 是否接近）
+    const audioTime = audio.value.currentTime
+    const timeDiff = Math.abs(audioTime - newTime)
+    // 如果时间差大于 0.5 秒，说明是从外部设置的，需要更新音频
+    if (timeDiff > 0.5) {
+      isUpdatingAudio = true
+      audio.value.currentTime = newTime
+      // 重置标志
+      setTimeout(() => {
+        isUpdatingAudio = false
+      }, 100)
+    }
+  }
+)
+
+// 监听 shouldSyncAudioTime 标志，当从歌词跳转时更新音频
+watch(
+  () => SongStore.shouldSyncAudioTime,
+  (shouldSync) => {
+    if (shouldSync && audio.value) {
+      isUpdatingAudio = true
+      audio.value.currentTime = SongStore.currentTime
+      SongStore.shouldSyncAudioTime = false
+      setTimeout(() => {
+        isUpdatingAudio = false
+      }, 100)
+    }
+  }
+)
 
 // 更新逻辑
 const handleTimeUpdate = () => {
