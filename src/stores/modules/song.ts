@@ -52,102 +52,113 @@ export const useSongStore = defineStore('song', {
     //播放列表
     playList: [
       {
-        name: '城北的花',
-        id: 2620105279,
-        pst: 0,
-        t: 0,
-        ar: [
+        "name": "泡沫（Beyonce）",
+        "mainTitle": "泡沫",
+        "additionalTitle": "（Beyonce）",
+        "id": 3340664978,
+        "pst": 0,
+        "t": 0,
+        "ar": [
           {
-            id: 49144727,
-            name: '王宇宙Leto',
-            tns: [],
-            alias: [],
+            "id": 121604391,
+            "name": "叶芷涵",
+            "tns": [],
+            "alias": []
           },
           {
-            id: 29785908,
-            name: '乔浚丞',
-            tns: [],
-            alias: [],
-          },
+            "id": 121656070,
+            "name": "裤裤",
+            "tns": [],
+            "alias": []
+          }
         ],
-        alia: [],
-        pop: 100,
-        st: 0,
-        rt: '',
-        fee: 8,
-        v: 4,
-        crbt: null,
-        cf: '',
-        al: {
-          id: 245844233,
-          name: '城北的花',
-          picUrl: 'https://p1.music.126.net/Eno98yIYHK4MV_FROntMKA==/109951169898012625.jpg',
-          tns: [],
-          pic_str: '109951169898012625',
-          pic: 109951169898012620,
+        "alia": [],
+        "pop": 100,
+        "st": 0,
+        "rt": "",
+        "fee": 8,
+        "v": 41,
+        "crbt": null,
+        "cf": "",
+        "al": {
+          "id": 358817432,
+          "name": "泡沫（Beyonce）",
+          "picUrl": "https://p3.music.126.net/pa1a6LsLgTmplkjv4pLlsw==/109951172613344898.jpg",
+          "tns": [],
+          "pic_str": "109951172613344898",
+          "pic": 109951172613344900
         },
-        dt: 198027,
-        h: {
-          br: 320002,
-          fid: 0,
-          size: 7923885,
-          vd: -28660,
-          sr: 48000,
+        "dt": 247719,
+        "h": {
+          "br": 320000,
+          "fid": 0,
+          "size": 9911085,
+          "vd": -3103,
+          "sr": 48000
         },
-        m: {
-          br: 192002,
-          fid: 0,
-          size: 4754349,
-          vd: -26054,
-          sr: 48000,
+        "m": {
+          "br": 192000,
+          "fid": 0,
+          "size": 5946669,
+          "vd": -490,
+          "sr": 48000
         },
-        l: {
-          br: 128002,
-          fid: 0,
-          size: 3169581,
-          vd: -24331,
-          sr: 48000,
+        "l": {
+          "br": 128000,
+          "fid": 0,
+          "size": 3964461,
+          "vd": 1163,
+          "sr": 48000
         },
-        sq: {
-          br: 963097,
-          fid: 0,
-          size: 23839949,
-          vd: -29075,
-          sr: 48000,
+        "sq": {
+          "br": 828871,
+          "fid": 0,
+          "size": 25670555,
+          "vd": -3096,
+          "sr": 48000
         },
-        hr: {
-          br: 1731787,
-          fid: 0,
-          size: 42867663,
-          vd: -28838,
-          sr: 48000,
+        "hr": null,
+        "a": null,
+        "cd": "01",
+        "no": 1,
+        "rtUrl": null,
+        "ftype": 0,
+        "rtUrls": [],
+        "djId": 0,
+        "copyright": 0,
+        "s_id": 0,
+        "mark": 17179869184,
+        "originCoverType": 2,
+        "originSongSimpleData": {
+          "songId": 233931,
+          "name": "泡沫",
+          "artists": [
+            {
+              "id": 7763,
+              "name": "G.E.M.邓紫棋"
+            }
+          ],
+          "albumMeta": {
+            "id": 23497,
+            "name": "Xposed"
+          }
         },
-        a: null,
-        cd: '01',
-        no: 1,
-        rtUrl: null,
-        ftype: 0,
-        rtUrls: [],
-        djId: 0,
-        copyright: 0,
-        s_id: 0,
-        mark: 17716748288,
-        originCoverType: 1,
-        originSongSimpleData: null,
-        tagPicList: null,
-        resourceState: true,
-        version: 4,
-        songJumpInfo: null,
-        entertainmentTags: null,
-        awardTags: null,
-        single: 0,
-        noCopyrightRcmd: null,
-        rtype: 0,
-        rurl: null,
-        mst: 9,
-        cp: 7001,
-        mv: 0,
-        publishTime: 0,
+        "tagPicList": null,
+        "resourceState": true,
+        "version": 7,
+        "songJumpInfo": null,
+        "entertainmentTags": null,
+        "awardTags": null,
+        "displayTags": null,
+        "markTags": [],
+        "single": 0,
+        "noCopyrightRcmd": null,
+        "mv": 0,
+        "rtype": 0,
+        "rurl": null,
+        "mst": 9,
+        "cp": 0,
+        "publishTime": 0
       },
       {
         name: '忽远忽近',
@@ -240,18 +251,6 @@ export const useSongStore = defineStore('song', {
         rtype: 0,
         rurl: null,
         publishTime: 0,
-      },
-      {
-        al: {
-          picUrl: 'https://p1.music.126.net/wYuFxK1i_5jqs58xXQ-Jfg==/109951167350445378.jpg'
-        },
-        ar: [
-          { name: 'LBI利比' }
-        ],
-        dt: 173382,
-        name: '小城夏天',
-        id: 1934251776,
-        fee: 8
       },
       {
         "name": "罗生门（Follow）",

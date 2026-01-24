@@ -76,7 +76,11 @@
     <!-- 右侧部分: 其他控制选项 -->
     <div class="w-1/3 flex items-center justify-end space-x-4 pr-6 sm:opacity-100 text-gray-400">
       <VolumeControl />
-      <div class="cursor-pointer" @click="SongStore.playListDisplay = !SongStore.playListDisplay">
+      <div
+        class="cursor-pointer"
+        data-playlist-toggle
+        @click="SongStore.playListDisplay = !SongStore.playListDisplay"
+      >
         <svg
           t="1729565872033"
           class="icon"
