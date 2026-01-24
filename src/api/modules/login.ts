@@ -82,6 +82,7 @@ export const loginAPI = {
     return request.get<QRCheckResponse>('/login/qr/check', {
       key,
       timestamp: Date.now(),
+      noCookie:true
     })
   },
 

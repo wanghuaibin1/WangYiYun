@@ -10,7 +10,7 @@ export const SongAPI = {
    */
   getSongDetail(ids: number | string) {
     return request.get<ApiResponse<{ songs: Song[] }>>('/song/detail', {
-      params: { ids },
+       ids ,
     })
   },
 
@@ -21,8 +21,9 @@ export const SongAPI = {
    * @returns {Promise<SongUrlResponse>} 返回歌曲的 URL 地址
    */
   getSongUrl(id: number | string, br?: number) {
-    return request.get<SongUrlResponse>('/song/url', {
+    return request.get<SongUrlResponse>('/song/url/v1', {
       id,
+      level:'exhigh',
       br,
     })
   },

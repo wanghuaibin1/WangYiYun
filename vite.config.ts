@@ -11,7 +11,8 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
+        // target: 'http://8.156.86.126:3000/',
+        target: 'https://ncm.zhenxin.me',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, '')
       }

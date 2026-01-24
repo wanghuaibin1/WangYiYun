@@ -30,12 +30,12 @@ export const routes: RouteRecordRaw[] = [
       //   component: () => import('@/views/playlist/index.vue'),
       //   meta: { requiresAuth: true },
       // },
-      // {
-      //   path: 'search',
-      //   name: 'search',
-      //   component: () => import('@/views/search/index.vue'),
-      //   meta: { requiresAuth: true },
-      // },
+      {
+        path: 'search',
+        name: 'search',
+        component: () => import('@/views/search/index.vue'),
+        meta: { requiresAuth: true },
+      },
     ],
   },
   {
