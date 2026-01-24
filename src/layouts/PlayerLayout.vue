@@ -461,7 +461,8 @@ const onPlayPageAfterLeave = () => {
 
 .layout-shell {
   position: relative;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   background: #0b1221;
   color: #e5e7eb;
 }
