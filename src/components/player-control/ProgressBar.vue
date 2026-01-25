@@ -26,6 +26,15 @@ const SongStore = useSongStore()
 const progressBar = ref<HTMLInputElement>()
 // 定义事件
 const emit = defineEmits(['updateData'])
+
+const props = withDefaults(defineProps<{
+  /**
+   * 缓冲进度（0~1），用于展示缓冲条，不限制播放/拖动
+   */
+  bufferedPercent?: number
+}>(), {
+  bufferedPercent: 0,
+})
 // 最大时间（歌曲时长）
 const maxTime = computed(() => SongStore.currentSong.dt / 1000)
 const localRate = ref(0)
@@ -47,6 +56,13 @@ watch(
   },
 )
 
+watch(
+  () => props.bufferedPercent,
+  () => {
+    progressBackground()
+  },
+)
+
 const isUserDragging = ref<boolean>(true)
 // 用户拖动时触发的事件
 const handleInput = () => {
@@ -61,11 +77,16 @@ const handleChange = () => {
 }
 //进度条背景颜色
 const progressBackground = () => {
-  if (SongStore.lyric.length === 0) return
-  const value = (localRate.value / SongStore.lyric.at(-1).time) * 100
+  const duration = maxTime.value || 0
+  if (!duration || !Number.isFinite(duration) || duration <= 0) return
+
+  const playedPct = Math.min(100, Math.max(0, (localRate.value / duration) * 100))
+  const bufferedPct = Math.min(100, Math.max(playedPct, (props.bufferedPercent || 0) * 100))
+
   requestAnimationFrame(() => {
     if (progressBar.value) {
-      progressBar.value.style.background = `linear-gradient(to right, #c7424d ${value}%, #4d4d56 ${value}%)`
+      // 三段：已播放(红) / 已缓冲(浅灰) / 未缓冲(深灰)
+      progressBar.value.style.background = `linear-gradient(to right, #c7424d ${playedPct}%, #8b8b93 ${playedPct}%, #8b8b93 ${bufferedPct}%, #4d4d56 ${bufferedPct}%)`
     }
   })
 }

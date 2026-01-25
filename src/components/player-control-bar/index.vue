@@ -71,7 +71,11 @@
       <!--      控制块-->
       <PlaybackControls ref="parentRef" />
       <!--      进度条-->
-      <ProgressBar @updateData="handleUpdate" ref="progressBarRef" />
+      <ProgressBar
+        ref="progressBarRef"
+        :buffered-percent="bufferedPercent"
+        @updateData="handleUpdate"
+      />
     </div>
     <!-- 右侧部分: 其他控制选项 -->
     <div class="w-1/3 flex items-center justify-end space-x-4 pr-6 sm:opacity-100 text-gray-400">
@@ -101,12 +105,13 @@
     </div>
   </div>
   <div>
-    <audio ref="audio" :src="SongStore.songUrl"></audio>
+    <!-- 走同源 /__media 代理，确保支持 Range 分段请求(206/Accept-Ranges) -->
+    <audio ref="audio" :src="audioUrl" preload="metadata"></audio>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted, onBeforeMount, watch, onBeforeUnmount } from 'vue'
+import { computed, ref, onMounted, onBeforeMount, watch, onBeforeUnmount, nextTick } from 'vue'
 import { useSongStore } from '@/stores/modules/song.ts'
 import { usePlayer } from '@/hooks/usePlayer.ts'
 import { getLyricByTime, formatProgress } from '@/utils/format.ts'
@@ -118,6 +123,14 @@ const { player } = usePlayer()
 const audio = ref<HTMLAudioElement>()
 const parentRef = ref()
 const progressBarRef = ref()
+const bufferedPercent = ref(0)
+const lastAutoPlaySrc = ref<string>('')
+
+ // 将第三方直链包一层同源代理，浏览器才能稳定走 Range 分段请求
+ const audioUrl = computed(() => {
+   if (!SongStore.songUrl) return ''
+   return `/__media?url=${encodeURIComponent(SongStore.songUrl)}`
+ })
 
 // 旋转角度状态
 const rotationAngle = ref(0)
@@ -166,12 +179,19 @@ watch(
       return
     }
     if (newVal) {
+       // 如果还没拿到 URL，先拉取
+       if (!SongStore.songUrl) {
+         const id = SongStore.playList?.[SongStore.currentIndex]?.id
+         if (id) player(id, SongStore.currentIndex)
+         return
+       }
       audio.value.play().catch((error) => {
         SongStore.playStatus = false
         if (error.name === 'NotAllowedError') {
           alert('播放失败，请允许浏览器播放音频')
         } else if (error.name === 'AbortError') {
-          alert('播放中断，请检查网络连接')
+           // AbortError 多数是切歌/重新加载导致浏览器取消请求，不等于网络中断
+           console.warn('播放被中断(AbortError)：可能是切歌/重新加载导致', error)
         } else {
           console.error('播放失败:', error)
         }
@@ -196,20 +216,60 @@ watch(
     SongStore.formatCurrentTime = '00:00'
     // 重置旋转角度
     rotationAngle.value = 0
+    bufferedPercent.value = 0
     // 确保 audio 已定义，并根据播放状态进行控制
     if (audio.value) {
       // 重置音频播放位置
       audio.value.currentTime = 0
-      // 明确设置 autoplay 属性，确保遵循当前播放状态
-      audio.value.autoplay = SongStore.playStatus
       if (SongStore.playStatus) {
-        // 播放状态为 true，播放音频
-        audio.value.play().catch((error) => console.error('播放失败:', error))
+        // 播放状态为 true：这里先不强行 play（src 可能还没更新完），交给下面的 audioUrl 监听来做“续播”
       } else {
         // 播放状态为 false，暂停音频
         audio.value.pause()
       }
     }
+  },
+)
+
+// 播放中切歌：当新 src 真正就绪（songUrl -> audioUrl 变化）时，自动续播
+const tryAutoPlay = async () => {
+  if (!audio.value) return
+  if (!SongStore.playStatus) return
+  const src = audioUrl.value
+  if (!src) return
+  if (src === lastAutoPlaySrc.value) return
+
+  lastAutoPlaySrc.value = src
+  await nextTick()
+
+  // 触发加载新资源，再尝试播放；readyState 不够就等 canplay 再播一次
+  const el = audio.value
+  try {
+    el.load()
+    await el.play()
+  } catch (error: any) {
+    if (error?.name === 'AbortError') {
+      // 多数是切歌/重新加载导致，等 canplay 再试一次
+      const once = async () => {
+        el.removeEventListener('canplay', once)
+        if (!SongStore.playStatus) return
+        try {
+          await el.play()
+        } catch (e) {
+          console.error('自动续播失败:', e)
+        }
+      }
+      el.addEventListener('canplay', once, { once: true })
+      return
+    }
+    console.error('自动续播失败:', error)
+  }
+}
+
+watch(
+  () => audioUrl.value,
+  () => {
+    tryAutoPlay()
   },
 )
 watch(
@@ -279,6 +339,19 @@ const handleTimeUpdate = () => {
 const handleEnded = () => {
   SongStore.nextSong(player)
 }
+
+// 更新缓冲进度（不限制播放/拖动，只用于展示缓冲条）
+const handleProgress = () => {
+  const el = audio.value
+  if (!el) return
+  const duration = el.duration
+  if (!duration || !Number.isFinite(duration) || duration <= 0) return
+  if (!el.buffered || el.buffered.length <= 0) return
+
+  // 取最后一个 buffered 区间的 end，通常更准确
+  const end = el.buffered.end(el.buffered.length - 1)
+  bufferedPercent.value = Math.max(0, Math.min(1, end / duration))
+}
 onBeforeMount(() => {
   player(SongStore.playList[SongStore.currentIndex].id, SongStore.currentIndex)
 })
@@ -287,6 +360,8 @@ onMounted(async () => {
   // 通过 timeupdate 事件监听器获取当前播放进度，并更新播放进度以及歌词内容
   audio.value.addEventListener('timeupdate', handleTimeUpdate)
   audio.value.addEventListener('ended', handleEnded)
+  audio.value.addEventListener('progress', handleProgress)
+  audio.value.addEventListener('loadedmetadata', handleProgress)
 
   // 组件挂载时，如果正在播放则开始旋转
   if (SongStore.playStatus) {
@@ -297,6 +372,8 @@ onMounted(async () => {
   onBeforeUnmount(() => {
     audio.value.removeEventListener('timeupdate', handleTimeUpdate)
     audio.value.removeEventListener('ended', handleEnded)
+    audio.value.removeEventListener('progress', handleProgress)
+    audio.value.removeEventListener('loadedmetadata', handleProgress)
     stopRotation()
   })
 })

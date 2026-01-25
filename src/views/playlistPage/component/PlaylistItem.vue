@@ -10,10 +10,20 @@
     <div class="flex w-4/5">
       <div class="cursor-pointer" @click="player(props.item.id, props.index)">
         <el-image
-          :src="props.item.al.picUrl"
+          :src="coverUrl"
           lazy
-          class="w-12 rounded-lg h-12 ring-1 ring-white/10"
-        />
+          fit="cover"
+          class="w-12 h-12 rounded-lg ring-1 ring-white/10"
+        >
+          <template #placeholder>
+            <div class="w-12 h-12 rounded-lg bg-white/5 animate-pulse"></div>
+          </template>
+
+          <template #error>
+            <div class="w-12 h-12 rounded-lg bg-white/10"></div>
+          </template>
+        </el-image>
+
       </div>
       <div class="h-12 ml-2 flex flex-col justify-center">
         <p
@@ -65,6 +75,13 @@ const vipTag = (fee?: number) => {
   if (fee === 1) return 'VIP 歌曲'
   return null
 }
+
+
+const coverUrl = computed(() => {
+  const size = isActive.value ? 200 : 80
+  return props.item.al.picUrl + `?param=${size}y${size}`
+})
+
 </script>
 
 <style scoped>

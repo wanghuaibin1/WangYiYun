@@ -162,7 +162,7 @@
     >
       <div
         v-if="SongStore.songDetailsDisplay"
-        class="absolute h-screen inset-0 z-[9000]"
+        class="play-page-wrapper"
       >
         <PlayPage />
       </div>
@@ -466,6 +466,7 @@ const onPlayPageAfterLeave = () => {
   background: #0b1221;
   color: #e5e7eb;
 }
+
 
 .layout-aside {
   position: fixed;
@@ -1028,14 +1029,21 @@ const onPlayPageAfterLeave = () => {
 }
 
 .layout-main {
-  position: relative;
-  margin-left: var(--aside-width);
-  margin-top: var(--header-height);
+  position: fixed;
+
+  top: var(--header-height);
+  left: var(--aside-width);
+  right: 0;
+  bottom: var(--control-bar-height);
   padding: 20px 24px;
-  height: calc(100vh - var(--header-height));
   overflow-y: auto;
-  padding-bottom: calc(var(--control-bar-height) + 24px);
   scroll-behavior: smooth;
+}
+
+.play-page-wrapper {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
 }
 
 .player-bar {
