@@ -1,7 +1,7 @@
-import { ref } from 'vue'
+// import { ref } from 'vue'
 import { SongAPI } from '@/api'
 import { formatLyr } from '@/utils/format'
-import { useSongStore } from '@/stores/modules/song.ts'
+import { useSongStore } from '@/stores/modules/song'
 import type { Song } from '@/types/player'
 
 export function usePlayer() {
@@ -82,6 +82,9 @@ export function usePlayer() {
       console.error('播放失败:', error)
     }
   }
+
+
+
 
   // 生成随机播放列表
   const getRandomPlayList = (): Song[] => {

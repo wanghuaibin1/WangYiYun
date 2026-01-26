@@ -17,17 +17,17 @@
   </div>
 </template>
 <script setup lang="ts">
-import { ref, onMounted, computed, onBeforeMount, watch } from 'vue'
+import { ref, onMounted, computed, onBeforeMount,watch } from 'vue'
 import mojs from '@mojs/core'
-import { useUserStore, useSongStore } from '@/stores'
-import { upCollectState } from '@/utils/songFunctions'
-import { ElMessage } from 'element-plus'
+import { useSongStore, useUserStore } from '@/stores'
+import { upCollectState } from '@/hooks/useUser'
+import { SongAPI } from '@/api'
 import { throttle } from 'lodash'
+import { ElMessage } from 'element-plus'
 
 // 状态管理
-const UserStore = useUserStore()
 const SongStore = useSongStore()
-
+const UserStore = useUserStore()
 // 属性
 const props = defineProps<{ id: number; wh: string }>()
 
@@ -99,27 +99,25 @@ const initAnimations = () => {
 
 // 收藏逻辑
 const addToFavorite = async () => {
-  // const res = await songLikeAPI({ id: props.id, like: 'true' });
-  // if (res.value.code === 200) {
-  //   UserStore.getCollectPlaylist();
-  //   SongStore.hearted = true;
-  //   ElMessage.success('已添加到我的喜欢');
-  // } else {
-  //   ElMessage.error('收藏失败');
-  // }
-  SongStore.hearted = true
+  const { data: res } = await SongAPI.likeSong(SongStore.currentSong.id)
+  if (res.value.code === 200) {
+    await UserStore.getLikeSongList()
+    SongStore.hearted = true
+    ElMessage.success('已添加到我的喜欢')
+  } else {
+    ElMessage.error('收藏失败')
+  }
 }
 
 const removeFromFavorite = async () => {
-  // const res = await songLikeAPI({ id: props.id, like: 'false' });
-  // if (res.value.code === 200) {
-  //   UserStore.getCollectPlaylist();
-  //   SongStore.hearted = false;
-  //   ElMessage.warning('已取消喜欢');
-  // } else {
-  //   ElMessage.error('取消收藏失败');
-  // }
-  SongStore.hearted = false
+  const { data: res } = await SongAPI.likeSong(SongStore.currentSong.id, false)
+  if (res.value.code === 200) {
+    await UserStore.getLikeSongList()
+    SongStore.hearted = false
+    ElMessage.success('已取消喜欢')
+  } else {
+    ElMessage.error('取消收藏失败')
+  }
 }
 
 // 收藏按钮点击逻辑
@@ -131,9 +129,16 @@ const thumbsUp = () => {
     removeFromFavorite()
   }
 }
-
+watch(
+  () => SongStore.currentSong.id,
+  () => {
+    UserStore.getLikeSongList().then(() => {
+      SongStore.hearted = upCollectState(SongStore.currentSong.id)
+    })
+  },
+)
 // 添加节流
-const throttledThumbsUp = throttle(thumbsUp, 500)
+const throttledThumbsUp = throttle(thumbsUp, 2000)
 
 // 生命周期钩子
 onBeforeMount(() => {

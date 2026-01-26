@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import type { Song, PlayMode, lyric } from '@/types/player'
+import type { Song, PlayMode } from '@/types/player'
 import { usePlayer } from '@/hooks/usePlayer.ts'
 import { formatProgress } from '@/utils/format.ts'
 
@@ -24,28 +24,6 @@ const PLAY_MODES: readonly PlayMode[] = [
   { type: 'loop', label: '单曲循环' },
 ] as const
 
-interface SongState {
-  playList: Song[]
-  playStatus: boolean
-  currentIndex: number
-  currentSongInShuffledIndex: number
-  currentSong: Song
-  duration: number
-  formatCurrentTime: string
-  currentTime: number
-  playProgressBarRate: number
-  volume: number
-  playMode: PlayMode
-  songUrl: string
-  lyric: lyric[]
-  isFavorite: boolean
-  shuffledPlayList: Song[]
-  currentTimeLyric: lyric[]
-  currenLastLy: lyric[]
-  songDetailsDisplay: boolean
-  playListDisplay: boolean
-  hearted: boolean
-}
 
 export const useSongStore = defineStore('song', {
   state: () => ({

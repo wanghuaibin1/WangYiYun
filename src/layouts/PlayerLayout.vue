@@ -182,7 +182,6 @@
 
 <script setup lang="ts">
 import { computed, onUnmounted, ref, watch, onMounted } from 'vue'
-import type { Ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useSongStore } from '@/stores/modules/song.ts'
 import { SearchAPI } from '@/api'

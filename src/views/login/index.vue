@@ -140,13 +140,14 @@ import { ref, reactive, watch, onUnmounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import type { FormInstance, FormRules } from 'element-plus'
 import { ElMessage } from 'element-plus'
-import { loginAPI, UserAPI } from '@/api'
+import { loginAPI } from '@/api'
+import { useUserStore } from '@/stores/modules/user'
 import { QRCodeStatus, type QRCheckResponse } from '@/types/api'
 
 // ==================== 常量定义 ====================
 const QR_CHECK_INTERVAL = 2000 // 二维码状态检查间隔（毫秒）
 const SUCCESS_CODE = 200 // 成功状态码
-
+const userStore = useUserStore()
 // ==================== 类型定义 ====================
 interface ScannerInfo {
   nickname: string
@@ -246,7 +247,7 @@ const resetQRState = () => {
 /**
  * 保存登录凭证
  */
-const saveLoginCredentials = (cookie: string, userInfo?: any) => {
+const saveLoginCredentials = (cookie: string, userInfo?: unknown) => {
   localStorage.setItem('Cookie', cookie)
   if (userInfo) {
     localStorage.setItem('UserInfo', JSON.stringify(userInfo))
@@ -257,18 +258,16 @@ const saveLoginCredentials = (cookie: string, userInfo?: any) => {
  * 处理登录成功后的操作
  */
 const handleLoginSuccess = async (cookie: string) => {
+
   try {
     document.cookie = cookie
     const { data: statusRes } = await loginAPI.RefreshLoginStatus(cookie)
     const accountId = statusRes.value.data?.account?.id
-
     if (accountId) {
-      const { data: userInfoRes } = await UserAPI.getUserInfo(accountId)
-      saveLoginCredentials(cookie, userInfoRes.value)
+      await userStore.loginSuccess(accountId,cookie)
     } else {
       saveLoginCredentials(cookie)
     }
-
     ElMessage.success('登录成功')
     router.push('/')
   } catch (error) {
@@ -342,12 +341,12 @@ const handleLogin = async () => {
 
     loading.value = true
     try {
-      const res = await loginAPI.loginByPhoneWithCaptcha(loginForm.phone, loginForm.captcha)
+      const {data: res } = await loginAPI.loginByPhoneWithCaptcha(loginForm.phone, loginForm.captcha)
 
-      if (res.code === SUCCESS_CODE && res.cookie) {
-        await handleLoginSuccess(res.cookie)
+      if (res.value.code === SUCCESS_CODE && res.value.cookie) {
+        await handleLoginSuccess(res.value.cookie)
       } else {
-        ElMessage.error(res.message || '登录失败，检测到您的网络环境存在风险，请稍后再试')
+        ElMessage.error(res.value.message || '登录失败，检测到您的网络环境存在风险，请稍后再试')
       }
     } catch (error) {
       console.error('登录失败:', error)

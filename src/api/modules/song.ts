@@ -10,7 +10,7 @@ export const SongAPI = {
    */
   getSongDetail(ids: number | string) {
     return request.get<ApiResponse<{ songs: Song[] }>>('/song/detail', {
-       ids ,
+      ids,
     })
   },
 
@@ -23,7 +23,7 @@ export const SongAPI = {
   getSongUrl(id: number | string, br?: number) {
     return request.get<SongUrlResponse>('/song/url/v1', {
       id,
-      level:'exhigh',
+      level: 'exhigh',
       br,
     })
   },
@@ -38,4 +38,15 @@ export const SongAPI = {
       id,
     })
   },
+  /**
+   * 喜欢/取消喜欢音乐，调用此接口，传入歌曲id实现收藏/取消收藏
+   * @param {number} id - 歌曲的唯一标识符，必传参数
+   * @param {boolean} [like=true] - 可选，是否喜欢；true=喜欢，false=取消喜欢，默认true
+   */
+  likeSong(id: number, like: boolean = true) {
+    return request.get('/like', {
+      id,
+      like, // 拼接可选参数，不传则默认不传该字段，接口按默认true处理
+    });
+  }
 }
