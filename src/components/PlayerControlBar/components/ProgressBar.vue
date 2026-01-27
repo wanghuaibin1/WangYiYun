@@ -1,6 +1,6 @@
 <template>
   <div class="flex items-center space-x-2 w-80">
-    <p class="text-xs text-gray-400">{{ SongStore.formatCurrentTime }}</p>
+<!--    <p class="text-xs text-gray-400">{{ SongStore.formatCurrentTime }}</p>-->
     <!-- 进度条 -->
     <input
       type="range"
@@ -13,7 +13,7 @@
       class="progress-bar"
       style="border-radius: 3px"
     />
-    <p class="text-xs text-gray-400">{{ formatTime(SongStore.currentSong.dt) }}</p>
+<!--    <p class="text-xs text-gray-400">{{ formatTime(SongStore.currentSong.dt) }}</p>-->
   </div>
 </template>
 

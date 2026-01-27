@@ -104,7 +104,7 @@
 import { defineExpose } from 'vue'
 import { useSongStore } from '@/stores/modules/song.ts'
 import { usePlayer } from '@/hooks/usePlayer.ts'
-import Collect from '@/components/player-control/Collect.vue'
+import Collect from '@/components/PlayerControlBar/components/Collect.vue'
 
 const SongStore = useSongStore()
 const { player } = usePlayer()
