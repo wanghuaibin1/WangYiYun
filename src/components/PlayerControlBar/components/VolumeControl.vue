@@ -2,11 +2,11 @@
   <div class="volume-wrap">
     <el-popover
       placement="top"
-      :width="56"
+      :width="64"
       trigger="hover"
       popper-class="volume-popper"
       :show-arrow="false"
-      :hide-after="80"
+      :hide-after="150"
     >
       <template #reference>
         <button
@@ -15,12 +15,15 @@
           :aria-label="isMuted ? '取消静音' : '静音'"
           @click="toggleMute"
         >
+          <!-- 静音图标 -->
           <svg v-if="isMuted" viewBox="0 0 24 24" class="volume-icon" aria-hidden="true">
             <path
               fill="currentColor"
               d="M16.5 12c0-.77-.18-1.49-.49-2.14l1.46-1.46A8.96 8.96 0 0 1 18.5 12c0 2.1-.72 4.04-1.93 5.58l-1.46-1.46c.85-1.14 1.39-2.55 1.39-4.12ZM19 12c0-2.48-.9-4.75-2.39-6.49l1.42-1.42A10.95 10.95 0 0 1 21 12c0 2.99-1.2 5.7-3.14 7.71l-1.42-1.42A8.94 8.94 0 0 0 19 12ZM4.27 3 3 4.27 7.73 9H3v6h4l5 5v-6.73l4.73 4.73 1.27-1.27L4.27 3ZM12 4 9.91 6.09 12 8.18V4Z"
             />
           </svg>
+
+          <!-- 普通音量图标 -->
           <svg v-else viewBox="0 0 24 24" class="volume-icon" aria-hidden="true">
             <path
               fill="currentColor"
@@ -30,6 +33,7 @@
         </button>
       </template>
 
+      <!-- 弹出面板 -->
       <div class="volume-panel">
         <el-slider
           class="volume-slider"
@@ -39,6 +43,7 @@
           :min="0"
           :max="100"
           :show-tooltip="false"
+          :reverse="true"
           @change="onVolumeCommitted"
         />
         <div class="volume-text" :class="{ muted: isMuted }">{{ SongStore.volume }}%</div>
@@ -46,12 +51,12 @@
     </el-popover>
   </div>
 </template>
+
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useSongStore } from '@/stores/modules/song.ts'
 
 const SongStore = useSongStore()
-
 const lastNonZeroVolume = ref<number>(50)
 
 const isMuted = computed(() => SongStore.volume === 0)
@@ -61,7 +66,7 @@ watch(
   (v) => {
     if (v > 0) lastNonZeroVolume.value = v
   },
-  { immediate: true },
+  { immediate: true }
 )
 
 const toggleMute = () => {
@@ -72,11 +77,11 @@ const toggleMute = () => {
   }
 }
 
-// 主要用于“松手”后确保 lastNonZeroVolume 刷新（部分拖动场景）
 const onVolumeCommitted = (v: number) => {
   if (v > 0) lastNonZeroVolume.value = v
 }
 </script>
+
 <style scoped>
 .volume-wrap {
   margin: 0 16px;
@@ -86,141 +91,151 @@ const onVolumeCommitted = (v: number) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
   color: #9ca3af;
   cursor: pointer;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  position: relative;
+  overflow: hidden;
   transition:
-    background 0.15s ease,
-    transform 0.15s ease,
-    color 0.15s ease,
-    border-color 0.15s ease,
-    box-shadow 0.15s ease;
+    background 0.3s ease,
+    transform 0.2s ease,
+    color 0.3s ease,
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
 }
 
 .volume-btn:hover {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.12);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
-  color: #e5e7eb;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.06));
+  border-color: rgba(255, 255, 255, 0.18);
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+  color: #ffffff;
+  transform: translateY(-1px);
 }
 
 .volume-btn:active {
-  transform: scale(0.98);
-}
-
-.volume-btn:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.25);
-  border-color: rgba(239, 68, 68, 0.5);
-  color: #e5e7eb;
+  transform: translateY(0) scale(0.96);
 }
 
 .volume-icon {
   width: 22px;
   height: 22px;
+  transition: transform 0.2s ease;
+}
+
+.volume-btn:hover .volume-icon {
+  transform: scale(1.05);
 }
 
 .volume-panel {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
-  padding: 12px 12px 10px;
+  gap: 12px;
+  padding: 16px 14px 12px;
 }
 
 .volume-text {
-  font-size: 12px;
-  color: rgba(229, 231, 235, 0.92);
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(229, 231, 235, 0.95);
   line-height: 1;
   user-select: none;
-  padding: 5px 10px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  padding: 6px 12px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.06));
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.1),
+    0 2px 8px rgba(0, 0, 0, 0.15);
+  letter-spacing: 0.5px;
+  transition: all 0.3s ease;
 }
 
 .volume-text.muted {
-  color: rgba(252, 165, 165, 0.95);
-  border-color: rgba(239, 68, 68, 0.25);
-  background: rgba(239, 68, 68, 0.1);
+  color: rgba(255, 180, 180, 1);
+  border-color: rgba(239, 68, 68, 0.3);
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.1));
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.1),
+    0 2px 6px rgba(239, 68, 68, 0.2),
+    0 0 12px rgba(239, 68, 68, 0.1);
+  animation: muted-pulse 2s ease-in-out infinite;
+}
+
+@keyframes muted-pulse {
+  0%, 100% {
+    box-shadow:
+      inset 0 1px 2px rgba(255, 255, 255, 0.1),
+      0 2px 6px rgba(239, 68, 68, 0.2),
+      0 0 12px rgba(239, 68, 68, 0.1);
+  }
+  50% {
+    box-shadow:
+      inset 0 1px 2px rgba(255, 255, 255, 0.1),
+      0 2px 8px rgba(239, 68, 68, 0.25),
+      0 0 16px rgba(239, 68, 68, 0.15);
+  }
 }
 </style>
 
 <style>
-/* popover 内容需要全局样式才能覆盖 element-plus popper */
+/* 全局 popover 样式 */
 .volume-popper {
   z-index: 10050 !important;
-  border-radius: 16px !important;
-  border: 1px solid rgba(255, 255, 255, 0.09) !important;
-  background: linear-gradient(180deg, rgba(31, 41, 55, 0.92), rgba(17, 24, 39, 0.88)) !important;
-  backdrop-filter: blur(10px);
+  border-radius: 20px !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  background: linear-gradient(180deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.92)) !important;
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
   padding: 0 !important;
   box-shadow:
-    0 14px 35px rgba(0, 0, 0, 0.45),
-    0 1px 0 rgba(255, 255, 255, 0.06) inset;
-}
-
-.volume-popper .el-slider.is-vertical {
-  margin: 0 !important;
-}
-
-/* Slider 美化（仅影响音量弹层内） */
-.volume-popper .volume-slider {
-  padding: 2px 0;
+    0 20px 50px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset,
+    0 2px 8px rgba(0, 0, 0, 0.3) inset;
 }
 
 .volume-popper .volume-slider.el-slider.is-vertical {
-  /* 给圆点留出空间，避免贴边/裁切 */
-  width: 24px;
-}
-
-.volume-popper .volume-slider.el-slider.is-vertical .el-slider__runway,
-.volume-popper .volume-slider.el-slider.is-vertical .el-slider__bar {
-  margin: 0 auto;
+  width: 28px;
 }
 
 .volume-popper .volume-slider .el-slider__runway {
-  width: 6px;
+  width: 8px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.12);
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.08),
-    inset 0 6px 14px rgba(0, 0, 0, 0.22);
+  background: rgba(30, 30, 40, 0.8);
 }
 
 .volume-popper .volume-slider .el-slider__bar {
-  width: 6px;
+  width: 8px;
   border-radius: 999px;
-  background: linear-gradient(180deg, #f43f5e 0%, #ef4444 40%, #fb7185 100%);
-  box-shadow: 0 0 14px rgba(239, 68, 68, 0.38);
+  background: linear-gradient(to top, #1d4ed8 0%, #2563eb 30%, #3b82f6 60%, #60a5fa 100%);
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
 }
 
-.volume-popper .volume-slider.el-slider.is-vertical .el-slider__button-wrapper {
+.volume-popper .volume-slider .el-slider__button-wrapper {
   left: 50%;
   transform: translateX(-50%);
 }
 
-.volume-popper .volume-slider .el-slider__button-wrapper {
-  width: 20px;
-  height: 20px;
-}
-
 .volume-popper .volume-slider .el-slider__button {
-  width: 12px;
-  height: 12px;
-  border: 2px solid rgba(255, 255, 255, 0.85);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.65));
-  box-shadow:
-    0 10px 18px rgba(0, 0, 0, 0.35),
-    0 0 0 4px rgba(239, 68, 68, 0.18);
+  width: 16px;
+  height: 16px;
+  border: 3px solid rgba(255, 255, 255, 0.95);
+  background: linear-gradient(135deg, #ffffff 0%, rgba(255,255,255,0.9) 100%);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4), inset 0 1px 2px rgba(255,255,255,0.8);
 }
 
 .volume-popper .volume-slider .el-slider__button:hover {
-  transform: scale(1.06);
+  transform: scale(1.15);
+}
+
+.volume-popper .volume-slider.is-dragging .el-slider__button {
+  transform: scale(1.2);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.6), inset 0 1px 2px rgba(255,255,255,1);
 }
 </style>

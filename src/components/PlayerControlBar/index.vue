@@ -131,9 +131,15 @@ const bufferedPercent = ref(0)
 const lastAutoPlaySrc = ref<string>('')
 
 // 将第三方直链包一层同源代理，浏览器才能稳定走 Range 分段请求
+// 开发环境使用代理，生产环境直接使用原始 URL
 const audioUrl = computed(() => {
   if (!SongStore.songUrl) return ''
-  return `/__media?url=${encodeURIComponent(SongStore.songUrl)}`
+  // 生产环境直接使用原始 URL，开发环境使用代理
+  if (import.meta.env.PROD) {
+    return SongStore.songUrl
+  } else {
+    return `/__media?url=${encodeURIComponent(SongStore.songUrl)}`
+  }
 })
 
 // 旋转角度状态

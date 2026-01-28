@@ -28,7 +28,8 @@ export default defineConfig({
             if (typeof range === 'string' && range.length > 0) headers.Range = range
 
             // 也透传常见的 UA/Referer 以提高第三方直链成功率（可选但常见有效）
-            if (typeof req.headers['user-agent'] === 'string') headers['User-Agent'] = req.headers['user-agent']
+            if (typeof req.headers['user-agent'] === 'string')
+              headers['User-Agent'] = req.headers['user-agent']
             if (typeof req.headers.referer === 'string') headers.Referer = req.headers.referer
 
             const upstream = await fetch(target, { headers, redirect: 'follow' })
@@ -59,26 +60,26 @@ export default defineConfig({
     },
   ],
   server: {
-    proxy: {
-      '/api': {
-        // target: 'http://8.156.86.126:3000/',
-        target: 'https://ncm.zhenxin.me',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, '')
-      }
-    },
+    // proxy: {
+    //   '/api': {
+    //     // target: 'http://8.156.86.126:3000/',
+    //     target: 'https://ncm.zhenxin.me',
+    //     changeOrigin: true,
+    //     rewrite: (path) => path.replace(/^\/api/, ''),
+    //   },
+    // },
     // 禁用浏览器缓存，避免 ERR_CACHE_READ_FAILURE
     headers: {
-      'Cache-Control': 'no-store'
-    }
+      'Cache-Control': 'no-store',
+    },
   },
   // 优化依赖预构建
   optimizeDeps: {
-    force: false // 设置为 true 可以强制重新预构建，但会减慢启动速度
+    force: false, // 设置为 true 可以强制重新预构建，但会减慢启动速度
   },
   resolve: {
     alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url))
-    }
-  }
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+    },
+  },
 })

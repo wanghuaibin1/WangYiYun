@@ -56,13 +56,13 @@
                 :ref="(el) => (lyricRefs[index] = el as HTMLElement)"
                 class="text-gray-400 transition-all duration-300 relative"
                 :class="{
-                  'text-white text-xl font-semibold scale-110':
+                  'lyric-current text-xl font-semibold scale-110':
                     isCurrentLyric(item) || (currentLyricIndex === -1 && isCenterLyric(index)),
-                  'text-gray-500':
+                  'lyric-played':
                     !isCurrentLyric(item) &&
                     !(currentLyricIndex === -1 && isCenterLyric(index)) &&
                     index < currentLyricIndex,
-                  'text-gray-600':
+                  'lyric-unplayed':
                     !isCurrentLyric(item) &&
                     !(currentLyricIndex === -1 && isCenterLyric(index)) &&
                     index > currentLyricIndex,
@@ -410,7 +410,6 @@ onBeforeUnmount(() => {
 
 // 配置播放详情页的主题色
 
-
 const themeStyle = computed(() => {
   const [r, g, b] = SongStore.themeRGB || [30, 30, 30]
   return {
@@ -419,12 +418,19 @@ const themeStyle = computed(() => {
     '--player-theme-b': b,
     '--player-theme-strong': `rgba(${r}, ${g}, ${b}, 0.55)`,
     '--player-theme-soft': `rgba(${r}, ${g}, ${b}, 0.25)`,
-    '--player-theme-light': `rgba(${r}, ${g}, ${b}, 0.12)`
+    '--player-theme-light': `rgba(${r}, ${g}, ${b}, 0.12)`,
   }
 })
 </script>
 
 <style scoped>
+:root {
+  --lyric-active: rgba(255, 255, 255, 0.95);
+  --lyric-normal: rgba(255, 255, 255, 0.65);
+  --lyric-dim: rgba(255, 255, 255, 0.38);
+  --lyric-shadow: rgba(0, 0, 0, 0.4);
+}
+
 /* 自定义滚动条样式 */
 div::-webkit-scrollbar {
   width: 6px;
@@ -453,6 +459,23 @@ div::-webkit-scrollbar-thumb:hover {
 .lyric-scroll::-webkit-scrollbar {
   display: none;
 }
+.lyric-current {
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 1.25rem;
+  font-weight: 600;
+  transform: scale(1.08);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.45);
+}
+
+.lyric-played {
+  color: rgba(255, 255, 255, 0.6);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+.lyric-unplayed {
+  color: rgba(255, 255, 255, 0.38);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
 
 /* 播放详情页背景 - 使用主题色从上到下线性渐变 */
 .player-background {
@@ -470,7 +493,6 @@ div::-webkit-scrollbar-thumb:hover {
         rgba(var(--player-theme-r), var(--player-theme-g), var(--player-theme-b), 1),
         rgba(var(--player-theme-r), var(--player-theme-g), var(--player-theme-b), 0.25),
         rgba(var(--player-theme-r), var(--player-theme-g), var(--player-theme-b), 0)
-
       ),
     /* 永远存在的深色基底 */ linear-gradient(180deg, #1a1f16, #0b0f0a);
 

@@ -20,11 +20,20 @@ type HttpOptions = Omit<AxiosRequestConfig, 'url' | 'method' | 'params' | 'data'
 export class Http {
   private instance: AxiosInstance
 
-  constructor(baseURL = '/api') {
+  constructor(baseURL = import.meta.env.VITE_BASE_API) {
+    // 如果 baseURL 未配置，输出警告
+    if (!baseURL) {
+      console.warn('[API Warning] VITE_BASE_API 未配置，请创建 .env 文件并设置 VITE_BASE_API')
+    }
+    
     this.instance = axios.create({
       baseURL,
-      withCredentials: true,
-      headers: {},
+      // 如果后端支持 CORS 且需要发送 cookies，设置为 true
+      // 如果遇到 CORS 问题，可以尝试设置为 false
+      withCredentials: import.meta.env.VITE_WITH_CREDENTIALS !== 'false',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
       timeout: 12000,
     })
     this.interceptors()
@@ -34,15 +43,60 @@ export class Http {
     // 请求拦截器
     this.instance.interceptors.request.use(
       (config: InternalAxiosRequestConfig) => {
-        // Add any logic for request interceptors here
+        // 开发环境打印请求信息
+        if (import.meta.env.DEV) {
+          console.log('[API Request]', config.method?.toUpperCase(), config.url, {
+            baseURL: config.baseURL,
+            params: config.params,
+            data: config.data,
+          })
+        }
         return config
       },
       (error: AxiosError) => Promise.reject(error),
     )
     // 响应拦截器
     this.instance.interceptors.response.use(
-      (response: AxiosResponse) => response.data,
+      (response: AxiosResponse) => {
+        // 开发环境打印响应信息
+        if (import.meta.env.DEV) {
+          console.log('[API Response]', response.config.url, {
+            status: response.status,
+            statusText: response.statusText,
+            data: response.data,
+            headers: response.headers,
+          })
+        }
+        
+        // 检查响应数据是否存在
+        if (response.data === null || response.data === undefined) {
+          console.warn('[API Warning] 响应数据为空', response.config.url)
+        }
+        
+        return response.data
+      },
       (error: AxiosError) => {
+        // 详细错误日志
+        if (error.response) {
+          // 服务器返回了错误响应
+          console.error('[API Error]', {
+            url: error.config?.url,
+            status: error.response.status,
+            statusText: error.response.statusText,
+            data: error.response.data,
+            headers: error.response.headers,
+          })
+        } else if (error.request) {
+          // 请求已发出但没有收到响应（可能是 CORS 问题）
+          console.error('[API Error] 无响应', {
+            url: error.config?.url,
+            message: '可能是 CORS 跨域问题或网络错误',
+          })
+        } else {
+          // 请求配置错误
+          console.error('[API Error] 请求配置错误', error.message)
+        }
+        
         errTip(error)
         return Promise.reject(error)
       },
