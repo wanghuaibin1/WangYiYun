@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import type { Song, PlayMode } from '@/types/player'
 import { usePlayer } from '@/hooks/usePlayer.ts'
 import { formatProgress } from '@/utils/format.ts'
-
+import { getThemeColor, type RGB,normalizeThemeColor } from '@/utils/themeColor'
 // 播放模式图标 SVG 常量
 const PLAY_MODE_ICONS = {
   sequence: `<svg t="1729340192401" class="icon" viewBox="0 0 1152 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="9608" width="20" height="20">
@@ -373,6 +373,8 @@ export const useSongStore = defineStore('song', {
     hearted: false,
     // 是否需要同步音频播放时间（用于外部跳转）
     shouldSyncAudioTime: false,
+    themeRGB: [30, 30, 30] as RGB,
+    cache: {} as Record<string, RGB>
   }),
 
   getters: {
@@ -493,6 +495,23 @@ export const useSongStore = defineStore('song', {
       this.initializePlayList()
     },
 
+    /*
+    *获取歌曲封面主题色
+     */
+    async setThemeByCover(coverUrl: string) {
+      if (!coverUrl) return
+
+      // 命中缓存，直接用
+      if (this.cache[coverUrl]) {
+        this.themeRGB = this.cache[coverUrl]
+        return
+      }
+
+      const rgb = await getThemeColor(coverUrl)
+      const safeRGB = normalizeThemeColor(rgb)
+      this.themeRGB = safeRGB
+      this.cache[coverUrl] = safeRGB
+    },
     /**
      * 重置播放状态
      */

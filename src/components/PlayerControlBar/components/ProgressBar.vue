@@ -1,5 +1,5 @@
 <template>
-  <div class="flex items-center space-x-2 w-80">
+  <div class="flex items-center space-x-2  ">
 <!--    <p class="text-xs text-gray-400">{{ SongStore.formatCurrentTime }}</p>-->
     <!-- 进度条 -->
     <input

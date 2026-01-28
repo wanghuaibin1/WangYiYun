@@ -1,7 +1,8 @@
 <template>
   <!-- 整体背景容器，预留底部播放栏高度（pb-32 大约 8rem，可按需调） -->
   <div
-    class="h-full w-full bg-gradient-to-b from-gray-900 to-black text-white px-12 py-10 pb-16 box-border"
+    class="h-full w-full text-white px-12 py-10 pb-16 box-border player-background"
+    :style="themeStyle"
   >
     <!-- 左封面 / 右歌词的两列布局 -->
     <div class="h-full w-full max-w-6xl mx-auto flex gap-10 items-center">
@@ -52,12 +53,19 @@
               <div
                 v-for="(item, index) in SongStore.lyric"
                 :key="index"
-                :ref="el => (lyricRefs[index] = el as HTMLElement)"
+                :ref="(el) => (lyricRefs[index] = el as HTMLElement)"
                 class="text-gray-400 transition-all duration-300 relative"
                 :class="{
-                  'text-white text-xl font-semibold scale-110': isCurrentLyric(item) || (currentLyricIndex === -1 && isCenterLyric(index)),
-                  'text-gray-500': !isCurrentLyric(item) && !(currentLyricIndex === -1 && isCenterLyric(index)) && index < currentLyricIndex,
-                  'text-gray-600': !isCurrentLyric(item) && !(currentLyricIndex === -1 && isCenterLyric(index)) && index > currentLyricIndex,
+                  'text-white text-xl font-semibold scale-110':
+                    isCurrentLyric(item) || (currentLyricIndex === -1 && isCenterLyric(index)),
+                  'text-gray-500':
+                    !isCurrentLyric(item) &&
+                    !(currentLyricIndex === -1 && isCenterLyric(index)) &&
+                    index < currentLyricIndex,
+                  'text-gray-600':
+                    !isCurrentLyric(item) &&
+                    !(currentLyricIndex === -1 && isCenterLyric(index)) &&
+                    index > currentLyricIndex,
                 }"
               >
                 <div class="flex items-center justify-center">
@@ -80,7 +88,12 @@
         </div>
         <!-- 固定在中间位置的时间按钮，只在手动滚动时显示 -->
         <button
-          v-if="isManualScrolling && centerLyricIndex >= 0 && SongStore.lyric && SongStore.lyric[centerLyricIndex]"
+          v-if="
+            isManualScrolling &&
+            centerLyricIndex >= 0 &&
+            SongStore.lyric &&
+            SongStore.lyric[centerLyricIndex]
+          "
           @click="seekToLyric(SongStore.lyric[centerLyricIndex].time)"
           class="absolute right-4 top-1/2 -translate-y-1/2 opacity-100 transition-opacity duration-200 px-3 py-1.5 text-xs text-gray-300 bg-gray-700 hover:bg-gray-600 rounded-full border border-gray-600 hover:border-gray-500 whitespace-nowrap z-10"
           title="从此处开始播放"
@@ -96,7 +109,7 @@
 import { computed, nextTick, ref, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useSongStore } from '@/stores/modules/song.ts'
 import { formatProgress } from '@/utils/format.ts'
-
+import { normalizeThemeColor } from '@/utils/themeColor'
 const SongStore = useSongStore()
 const lyricListRef = ref<HTMLElement | null>(null)
 const lyricRefs = ref<HTMLElement[]>([])
@@ -124,7 +137,7 @@ const artistsName = computed(() => {
   if (!SongStore.currentSong.ar || SongStore.currentSong.ar.length === 0) {
     return '未知艺术家'
   }
-  return SongStore.currentSong.ar.map(artist => artist.name).join(' / ')
+  return SongStore.currentSong.ar.map((artist) => artist.name).join(' / ')
 })
 
 // 当前歌词索引
@@ -137,7 +150,7 @@ const currentLyricIndex = computed(() => {
     return -1
   }
   return SongStore.lyric.findIndex(
-    lyric => lyric.time === currentLyric.time && lyric.text === currentLyric.text
+    (lyric) => lyric.time === currentLyric.time && lyric.text === currentLyric.text,
   )
 })
 
@@ -281,7 +294,7 @@ watch(
       rotateCover()
     }
     // 暂停时不重置角度，保持当前角度
-  }
+  },
 )
 
 // 监听当前歌曲变化，重置旋转角度
@@ -289,13 +302,13 @@ watch(
   () => SongStore.currentSong,
   () => {
     rotationAngle.value = 0
-  }
+  },
 )
 
 // 歌词加载/切歌时，让第一句歌词静态居中（即使还没开始播放）
 watch(
   () => SongStore.lyric,
-  async newLyric => {
+  async (newLyric) => {
     if (!newLyric || newLyric.length === 0) {
       topPadding.value = 0
       return
@@ -314,13 +327,13 @@ watch(
     // 切歌/刷新后回到顶部，让第一句一开始就在中间
     container.scrollTo({ top: 0, behavior: 'auto' })
   },
-  { immediate: true }
+  { immediate: true },
 )
 
 // 将当前歌词行滚动到容器中间
 watch(
   () => currentLyricIndex.value,
-  newIndex => {
+  (newIndex) => {
     if (newIndex === -1) return
 
     // 如果自动滚动被暂停（用户正在手动滚动），则不执行自动滚动
@@ -345,10 +358,7 @@ watch(
     const targetOffset = target.offsetTop
     const targetHeight = target.clientHeight
     // 第一行直接从顶部开始滚动，避免先停顿再移动的感觉
-    const scrollTop =
-      newIndex === 0
-        ? 0
-        : targetOffset - containerHeight / 2 + targetHeight / 2
+    const scrollTop = newIndex === 0 ? 0 : targetOffset - containerHeight / 2 + targetHeight / 2
 
     smoothScrollTo(container, scrollTop)
 
@@ -361,7 +371,7 @@ watch(
       }, 300)
     }, 100)
   },
-  { immediate: true }
+  { immediate: true },
 )
 
 // 监听歌词变化，更新居中歌词
@@ -370,7 +380,7 @@ watch(
   async () => {
     await nextTick()
     updateCenterLyric()
-  }
+  },
 )
 
 onMounted(() => {
@@ -395,6 +405,21 @@ onBeforeUnmount(() => {
   if (resumeAutoScrollTimer !== null) {
     clearTimeout(resumeAutoScrollTimer)
     resumeAutoScrollTimer = null
+  }
+})
+
+// 配置播放详情页的主题色
+
+
+const themeStyle = computed(() => {
+  const [r, g, b] = SongStore.themeRGB || [30, 30, 30]
+  return {
+    '--player-theme-r': r,
+    '--player-theme-g': g,
+    '--player-theme-b': b,
+    '--player-theme-strong': `rgba(${r}, ${g}, ${b}, 0.55)`,
+    '--player-theme-soft': `rgba(${r}, ${g}, ${b}, 0.25)`,
+    '--player-theme-light': `rgba(${r}, ${g}, ${b}, 0.12)`
   }
 })
 </script>
@@ -427,5 +452,28 @@ div::-webkit-scrollbar-thumb:hover {
 
 .lyric-scroll::-webkit-scrollbar {
   display: none;
+}
+
+/* 播放详情页背景 - 使用主题色从上到下线性渐变 */
+.player-background {
+  background:
+    /* 顶部横向扩散的主题色空气层 */
+    linear-gradient(
+      180deg,
+      var(--player-theme-strong) 0%,
+      var(--player-theme-soft) 40%,
+      rgba(0, 0, 0, 0) 70%
+    ),
+    /* 整体染色层（铺满横向，不是中心） */
+      linear-gradient(
+        180deg,
+        rgba(var(--player-theme-r), var(--player-theme-g), var(--player-theme-b), 1),
+        rgba(var(--player-theme-r), var(--player-theme-g), var(--player-theme-b), 0.25),
+        rgba(var(--player-theme-r), var(--player-theme-g), var(--player-theme-b), 0)
+
+      ),
+    /* 永远存在的深色基底 */ linear-gradient(180deg, #1a1f16, #0b0f0a);
+
+  transition: background 0.6s ease;
 }
 </style>

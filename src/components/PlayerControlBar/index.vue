@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full">
+  <div >
     <!--      进度条-->
     <ProgressBar
       ref="progressBarRef"
@@ -174,6 +174,15 @@ const stopRotation = () => {
     animationFrameId = null
   }
 }
+watch(
+  () => SongStore.currentSong,
+  async (cover) => {
+    if (cover) {
+     await SongStore.setThemeByCover(SongStore.currentSong.al.picUrl)
+    }
+  },
+  { immediate: true }
+)
 // 监听播放状态
 watch(
   () => SongStore.playStatus,

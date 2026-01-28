@@ -15,6 +15,7 @@ export interface Album {
 }
 
 export interface Song {
+  songUrl: Ref<T, any> | ComputedRef<T> | (() => T) | T | readonly [...T] | T | [...T]
   id: number
   name: string
   ar: Artist[]

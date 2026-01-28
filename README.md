@@ -79,96 +79,105 @@
 
 ```
 vue-project/
-├── public/                 # 静态资源目录
-│   └── favicon.ico        # 网站图标
+├── public/                    # 静态资源目录
+│   └── favicon.ico            # 网站图标
 │
-├── src/                   # 源代码目录
-│   ├── api/              # API 接口定义
-│   │   ├── modules/      # 模块化 API
-│   │   │   ├── login.ts  # 登录相关 API
-│   │   │   ├── song.ts   # 歌曲相关 API
-│   │   │   └── user.ts   # 用户相关 API
-│   │   ├── index.ts      # API 导出
-│   │   └── request.ts    # Axios 请求封装
+├── src/                       # 源代码目录
+│   ├── api/                   # API 接口定义
+│   │   ├── modules/           # 模块化 API
+│   │   │   ├── login.ts       # 登录相关 API
+│   │   │   ├── song.ts        # 歌曲相关 API
+│   │   │   ├── search.ts      # 搜索相关 API（热搜、联想、搜索结果）
+│   │   │   └── user.ts        # 用户相关 API
+│   │   ├── index.ts           # API 导出
+│   │   └── request.ts         # Axios 请求封装
 │   │
-│   ├── assets/           # 静态资源
-│   │   ├── images/       # 图片资源
-│   │   ├── styles/       # 样式文件
-│   │   ├── base.css      # 基础样式
-│   │   └── main.css      # 主样式文件
+│   ├── assets/                # 静态资源 & 样式
+│   │   ├── base.css           # 基础样式
+│   │   ├── main.css           # 主样式文件
+│   │   └── logo.svg           # LOGO 资源
 │   │
-│   ├── components/       # 组件目录
-│   │   ├── base/         # 基础组件
-│   │   │   └── ErrorBoundary.vue  # 错误边界组件
-│   │   ├── player-control/  # 播放器控制组件
-│   │   │   ├── Collect.vue        # 收藏组件
-│   │   │   ├── PlaybackControls.vue  # 播放控制组件
-│   │   │   ├── ProgressBar.vue    # 进度条组件
-│   │   │   └── VolumeControl.vue  # 音量控制组件
-│   │   └── player-control-bar/    # 播放控制栏
+│   ├── components/            # 通用组件
+│   │   ├── base/              # 基础组件
+│   │   │   └── ErrorBoundary.vue        # 错误边界组件
+│   │   ├── player-control/    # 播放器控制子组件
+│   │   │   ├── Collect.vue              # 收藏按钮
+│   │   │   ├── PlaybackControls.vue     # 播放/切歌控制
+│   │   │   ├── ProgressBar.vue          # 播放进度条
+│   │   │   └── VolumeControl.vue        # 音量控制
+│   │   └── player-control-bar/          # 底部播放控制栏
 │   │       └── index.vue
 │   │
-│   ├── config/           # 配置文件
+│   ├── hooks/                 # 组合式函数
+│   │   ├── usePlayer.ts       # 播放器逻辑封装
+│   │   ├── useTheme.ts        # 主题切换逻辑
+│   │   └── useUser.ts         # 用户登录/信息逻辑封装
 │   │
-│   ├── hooks/            # 组合式函数
-│   │   ├── usePlayer.ts  # 播放器逻辑封装
-│   │   └── useTheme.ts   # 主题切换逻辑
+│   ├── layouts/               # 布局组件
+│   │   └── PlayerLayout.vue   # 三层播放器布局（侧边栏 + 顶部搜索 + 底部播放栏）
 │   │
-│   ├── layouts/          # 布局组件
-│   │   └── PlayerLayout.vue  # 播放器布局
+│   ├── router/                # 路由配置
+│   │   ├── modules/           # 路由模块
+│   │   │   ├── guards.ts      # 路由守卫（登录校验等）
+│   │   │   └── router.ts      # 路由定义
+│   │   └── index.ts           # 路由入口
 │   │
-│   ├── router/           # 路由配置
-│   │   ├── modules/      # 路由模块
-│   │   │   ├── guards.ts # 路由守卫
-│   │   │   └── router.ts # 路由定义
-│   │   └── index.ts      # 路由入口
+│   ├── stores/                # 状态管理（Pinia）
+│   │   ├── modules/           # 状态模块
+│   │   │   ├── song.ts        # 播放器/歌曲状态管理
+│   │   │   └── user.ts        # 用户状态管理
+│   │   └── index.ts           # Store 统一导出
 │   │
-│   ├── stores/           # 状态管理
-│   │   ├── modules/      # 状态模块
-│   │   │   ├── song.ts   # 歌曲状态管理
-│   │   │   └── user.ts   # 用户状态管理
-│   │   └── index.ts      # Store 入口
+│   ├── types/                 # TypeScript 类型定义
+│   │   ├── api/               # API 类型
+│   │   │   └── index.ts
+│   │   ├── api.d.ts           # API 类型声明
+│   │   ├── axios.d.ts         # Axios 类型声明
+│   │   ├── player.d.ts        # 播放器/歌曲类型
+│   │   └── search.d.ts        # 搜索相关类型
 │   │
-│   ├── types/            # TypeScript 类型定义
-│   │   ├── api/          # API 类型
-│   │   ├── api.d.ts      # API 类型声明
-│   │   ├── axios.d.ts    # Axios 类型声明
-│   │   └── player.d.ts   # 播放器类型
+│   ├── utils/                 # 工具函数
+│   │   ├── format.ts          # 时间/进度等格式化工具
+│   │   ├── fun.ts             # 通用小工具函数
+│   │   └── storage.ts         # 本地存储工具（localStorage 等）
 │   │
-│   ├── utils/            # 工具函数
-│   │   ├── format.ts     # 格式化工具
-│   │   ├── songFunctions.ts  # 歌曲相关工具
-│   │   └── storage.ts    # 本地存储工具
+│   ├── views/                 # 页面组件
+│   │   ├── error/
+│   │   │   └── 404.vue        # 404 页面
+│   │   ├── home/
+│   │   │   ├── component/
+│   │   │   │   └── RankBoardCard.vue    # 榜单卡片组件
+│   │   │   └── index.vue      # 首页（推荐/榜单/队列）
+│   │   ├── login/
+│   │   │   └── index.vue      # 登录页
+│   │   ├── play-page/
+│   │   │   └── index.vue      # 全屏歌词播放页
+│   │   ├── playlistPage/
+│   │   │   ├── component/
+│   │   │   │   └── PlaylistItem.vue     # 播放列表项
+│   │   │   └── index.vue      # 播放列表弹层
+│   │   └── search/
+│   │       ├── components/
+│   │       │   └── SearchSongList.vue   # 搜索结果列表
+│   │       └── index.vue      # 搜索结果页
 │   │
-│   ├── views/            # 页面组件
-│   │   ├── error/        # 错误页面
-│   │   │   └── 404.vue   # 404 页面
-│   │   ├── home/         # 首页
-│   │   │   └── index.vue
-│   │   ├── login/        # 登录页
-│   │   │   └── index.vue
-│   │   ├── play-page/    # 播放详情页
-│   │   │   └── index.vue
-│   │   ├── playlistPage/ # 播放列表页
-│   │   │   └── index.vue
-│   │   └── search/       # 搜索页
-│   │       └── index.vue
-│   │
-│   ├── App.vue           # 根组件
-│   └── main.ts           # 应用入口
+│   ├── App.vue                # 根组件（包裹错误边界 + 路由视图）
+│   └── main.ts                # 应用入口（创建应用、挂载路由/Pinia/UI 库）
 │
-├── docs/                 # 文档目录
-│
-├── .gitignore           # Git 忽略配置
-├── eslint.config.js     # ESLint 配置
-├── index.html           # HTML 模板
-├── package.json         # 项目依赖配置
-├── postcss.config.js    # PostCSS 配置
-├── qodana.yaml          # Qodana 配置
-├── tailwind.config.js   # Tailwind CSS 配置
-├── tsconfig.json        # TypeScript 配置
-├── vite.config.ts       # Vite 配置
-└── vitest.config.ts     # Vitest 配置
+├── .gitignore                 # Git 忽略配置
+├── env.d.ts                   # 环境类型声明
+├── eslint.config.js           # ESLint 配置
+├── index.html                 # HTML 模板
+├── package.json               # 项目依赖配置
+├── package-lock.json          # 锁定依赖版本
+├── postcss.config.js          # PostCSS 配置
+├── tailwind.config.js         # Tailwind CSS 配置
+├── tsconfig.json              # TypeScript 基础配置
+├── tsconfig.app.json          # 应用 TS 配置
+├── tsconfig.node.json         # Node 端 TS 配置
+├── tsconfig.vitest.json       # 测试 TS 配置
+├── vite.config.ts             # Vite 配置
+└── vitest.config.ts           # Vitest 配置
 ```
 
 ## 🚀 快速开始
@@ -291,11 +300,18 @@ import { useSongStore } from '@/stores/modules/song'
 
 ### 布局结构
 
-项目采用三层布局结构：
+项目采用三层布局结构（见 `PlayerLayout.vue`）：
 
-1. **底层** - 正常页面内容（首页、歌单等）
-2. **中层** - 全屏播放详情页（可覆盖在普通页面上）
-3. **顶层** - 底部播放控制栏（固定定位，始终可见）
+1. **底层** - 正常页面内容（首页、搜索结果、歌单等，通过 `<router-view>` 渲染）
+2. **中层** - 全屏播放详情页（歌词页，可覆盖在普通页面上，支持进入时锁定滚动）
+3. **顶层** - 底部播放控制栏（固定定位，始终可见，承载播放/进度/音量等控制）
+
+顶部还集成了一个**全局搜索栏**：
+
+- 支持搜索历史记录管理（本地 `localStorage` 存储）
+- 支持热搜榜展示和一键播放热搜榜单
+- 输入时提供实时搜索联想（关键词拆分 + 歌曲名联想）
+- 搜索结果通过路由跳转到 `search` 页面展示
 
 ## 🎯 开发规范
 
