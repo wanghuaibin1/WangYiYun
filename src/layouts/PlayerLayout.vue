@@ -1,16 +1,26 @@
 <template>
-  <div class="layout-shell">
+  <div class="layout-shell" :class="{'user-background':UserStore.backTheme}"  :style="userThemeStyle">
     <!-- 固定侧边栏 -->
     <aside class="layout-aside">
       <div class="aside-inner">
         <div class="logo">Music</div>
         <nav class="menu">
-          <a class="menu-item active" href="/">首页</a>
-          <a class="menu-item" href="/play">播放</a>
+          <RouterLink :to="{ name: 'home' }" class="menu-item" :class="{ active: route.name === 'home' }">
+            首页
+          </RouterLink>
+          <RouterLink
+            :to="{ name: 'profile' }"
+            class="menu-item"
+            :class="{ active: route.name === 'profile' }"
+          >
+            个人主页
+          </RouterLink>
+          <RouterLink :to="{ name: 'play' }" class="menu-item" :class="{ active: route.name === 'play' }">
+            播放
+          </RouterLink>
         </nav>
       </div>
     </aside>
-
     <!-- 固定顶部栏 -->
     <header class="layout-header">
       <div class="header-inner">
@@ -148,7 +158,6 @@
         </div>
       </div>
     </header>
-
     <!-- 中部内容，独立滚动 -->
     <main class="layout-main custom-scrollbar">
       <router-view />
@@ -182,8 +191,8 @@
 
 <script setup lang="ts">
 import { computed, onUnmounted, ref, watch, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { useSongStore } from '@/stores/modules/song.ts'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
+import { useSongStore,useUserStore } from '@/stores/index.ts'
 import { SearchAPI } from '@/api'
 import type { SearchSuggestResult, SearchHotItem } from '@/types/search'
 import type { Song } from '@/types/player'
@@ -192,8 +201,11 @@ import PlayListPage from '@/views/PlayListPage/index.vue'
 import PlayPage from '@/views/play-page/index.vue'
 import RankBoardCard from '@/views/home/component/RankBoardCard.vue'
 
+
 const SongStore = useSongStore()
+const UserStore = useUserStore()
 const router = useRouter()
+const route = useRoute()
 
 const headerKeyword = ref('')
 const headerShowSuggest = ref(false)
@@ -409,6 +421,8 @@ const handleClickOutside = (event: MouseEvent) => {
 onMounted(() => {
   loadHeaderHistory()
   fetchHeaderHot()
+  UserStore.setUserThemeByCover(UserStore.UserInfo.profile.avatarUrl)
+
   // 使用 mousedown 事件，在 focus 之前触发，避免冲突
   document.addEventListener('mousedown', handleClickOutside)
 })
@@ -449,6 +463,20 @@ const onPlayPageAfterLeave = () => {
   savedScrollY = 0
 }
 
+
+// 配置用户头像的主题色
+
+const userThemeStyle = computed(() => {
+  const [r, g, b] = UserStore.userThemeRGB || [30, 30, 30]
+  return {
+    '--user-theme-r': r,
+    '--user-theme-g': g,
+    '--user-theme-b': b,
+    '--user-theme-strong': `rgba(${r}, ${g}, ${b}, 0.55)`,
+    '--user-theme-soft': `rgba(${r}, ${g}, ${b}, 0.25)`,
+    '--user-theme-light': `rgba(${r}, ${g}, ${b}, 0.12)`,
+  }
+})
 </script>
 
 <style scoped>
@@ -474,7 +502,7 @@ const onPlayPageAfterLeave = () => {
   width: var(--aside-width);
   height: 100vh;
   padding: 20px 16px;
-  background: linear-gradient(180deg, rgba(34, 40, 64, 0.95), rgba(22, 29, 48, 0.95));
+  background: linear-gradient(180deg, rgba(34, 40, 64, 0.15), rgba(22, 29, 48, 0.25));
   border-right: 1px solid rgba(255, 255, 255, 0.05);
   z-index: 3000;
   overflow-y: auto;
@@ -520,8 +548,8 @@ const onPlayPageAfterLeave = () => {
   right: 0;
   height: var(--header-height);
   padding: 0 24px;
-  background: rgba(12, 18, 32, 0.9);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(12, 18, 32, 0);
+
   backdrop-filter: blur(10px);
   z-index: 3000;
   display: flex;
@@ -570,7 +598,7 @@ const onPlayPageAfterLeave = () => {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: rgba(12, 18, 32, 0.9);
+  background: rgba(12, 18, 32, 0.1);
   border: none;
   color: #9ca3af;
   cursor: pointer;
@@ -608,15 +636,10 @@ const onPlayPageAfterLeave = () => {
   gap: 10px;
   padding: 8px 14px;
   border-radius: 12px;
-  background: rgba(30, 41, 59, 0.9);
+  background: rgba(30, 41, 59, 0.1);
   border: 1px solid rgba(148, 163, 184, 0.2);
   flex: 1;
   transition: all 0.2s ease;
-}
-
-.search-box:focus-within {
-  background: rgba(51, 65, 85, 0.9);
-  border-color: rgba(148, 163, 184, 0.4);
 }
 
 .header-suggest-panel {
@@ -1094,5 +1117,26 @@ const onPlayPageAfterLeave = () => {
 .play-page-leave-to {
   opacity: 0;
   transform: translateY(20px) scale(0.98);
+}
+
+.user-background {
+  background:
+    /* 顶部横向扩散的主题色空气层 */
+    linear-gradient(
+      180deg,
+      var(--user-theme-strong) 0%,
+      var(--user-theme-soft) 40%,
+      rgba(0, 0, 0, 0) 70%
+    ),
+      /* 整体染色层（铺满横向，不是中心） */
+    linear-gradient(
+      180deg,
+      rgba(var(--user-theme-r), var(--user-theme-g), var(--user-theme-b), 1),
+      rgba(var(--user-theme-r), var(--user-theme-g), var(--user-theme-b), 0.25),
+      rgba(var(--user-theme-r), var(--user-theme-g), var(--user-theme-b), 0)
+    ),
+      /* 永远存在的深色基底 */ linear-gradient(180deg, #1a1f16, #0b0f0a);
+
+  transition: background 0.6s ease;
 }
 </style>

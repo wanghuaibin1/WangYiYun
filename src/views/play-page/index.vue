@@ -109,7 +109,7 @@
 import { computed, nextTick, ref, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useSongStore } from '@/stores/modules/song.ts'
 import { formatProgress } from '@/utils/format.ts'
-import { normalizeThemeColor } from '@/utils/themeColor'
+
 const SongStore = useSongStore()
 const lyricListRef = ref<HTMLElement | null>(null)
 const lyricRefs = ref<HTMLElement[]>([])

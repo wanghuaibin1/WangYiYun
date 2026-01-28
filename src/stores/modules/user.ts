@@ -1,7 +1,8 @@
 import { defineStore } from 'pinia'
 import { storage, STORAGE_KEY } from '@/utils/storage'
 import { UserAPI } from '@/api'
-import type { ReplacePhoneParams } from '@/api/modules/user' // 需导入换绑手机的参数类型
+import type { ReplacePhoneParams } from '@/api/modules/user'
+import { getThemeColor, normalizeThemeColor, type RGB } from '@/utils/themeColor.ts' // 需导入换绑手机的参数类型
 interface UserProfile {
   userId: number
   nickname?: string
@@ -20,10 +21,14 @@ export const useUserStore = defineStore('user', {
     UserInfo: storage.get(STORAGE_KEY.USER_INFO) || null,
     likeList: [] as string[], //喜欢列表
     userData: [], //用户信息 , 歌单，收藏，mv, dj 数量
+    userPlaylists: [] as any[], // 用户歌单列表
     accountInformation: [], //账号信息
     userLevel: '', //用户等级信息
     userBinding_information: [], //用户绑定信息
     bindMobile_phone: [], //用户绑定手机
+    userThemeRGB: [30, 30, 30] as RGB, //用户头像主题色
+    userCache: {} as Record<string, RGB>,
+    backTheme: true as boolean,
   }),
 
   getters: {
@@ -64,12 +69,12 @@ export const useUserStore = defineStore('user', {
      * @param uid 用户id
      * @param cookie 登录成功的cookie
      */
-    async loginSuccess(uid:number,cookie:string) {
+    async loginSuccess(uid: number, cookie: string) {
       try {
         // 并行请求，提升效率
         await Promise.all([
-          this.getUserInfo(uid,cookie),
-          this.getLikeSongList(uid),
+          this.getUserInfo(uid, cookie),
+          this.getLikeSongList(),
           this.getUserLevel(),
         ])
         console.log('用户信息并行拉取完成')
@@ -83,10 +88,10 @@ export const useUserStore = defineStore('user', {
      * @param cookie
      * @returns 返回用户详情信息
      */
-    async getUserInfo(uid: number,cookie:string) {
+    async getUserInfo(uid: number, cookie: string) {
       try {
         const { data: res } = await UserAPI.getUserInfoAPI(uid)
-        this.setUserInfo(res.value,cookie)
+        this.setUserInfo(res.value, cookie)
       } catch (err) {
         console.error('获取用户详情失败', err)
       }
@@ -140,18 +145,27 @@ export const useUserStore = defineStore('user', {
     },
 
     /**
-     * 获取用户等级信息（登录后调用，无参数）
-     * @returns {Promise<void>}
+     * 获取用户歌单列表（创建/收藏）
      */
-    async getUserLevel() {
+    async getUserPlaylists(uid?: number) {
+      const targetUid = uid ?? this.userId
+      if (!targetUid) {
+        console.warn('用户未登录，无法获取歌单列表')
+        this.userPlaylists = []
+        return
+      }
       try {
-        const { data: res } = await UserAPI.getUserLevel()
-        this.userLevel = res.value?.data.level || '' // 匹配state的字符串类型，失败兜底空字符串
+        const { data: res } = await UserAPI.getUserPlaylist(targetUid)
+        // Netease 原始结构通常为 { playlist: [...] }，这里做兼容兜底
+        const raw = (res as any)?.value as any
+        const list = Array.isArray(raw?.playlist) ? raw.playlist : Array.isArray(raw) ? raw : []
+        this.userPlaylists = list
       } catch (err) {
-        this.userLevel = '' // 失败兜底空字符串
-        console.error('获取用户等级信息失败', err)
+        this.userPlaylists = []
+        console.error('获取用户歌单列表失败', err)
       }
     },
+
 
     /**
      * 获取用户绑定信息（登录后调用，必传用户ID）
@@ -184,6 +198,22 @@ export const useUserStore = defineStore('user', {
         console.error('用户更换绑定手机失败', err)
         return false // 失败返回false
       }
+    },
+
+    /*
+     *获取用户头像主题色
+     */
+    async setUserThemeByCover(coverUrl: string) {
+      if (!coverUrl) return
+      // 命中缓存，直接用
+      if (this.userCache[coverUrl]) {
+        this.userThemeRGB = this.userCache[coverUrl]
+        return
+      }
+      const rgb = await getThemeColor(coverUrl)
+      const safeRGB = normalizeThemeColor(rgb)
+      this.userThemeRGB = safeRGB
+      this.userCache[coverUrl] = safeRGB
     },
     /**
      * 清除用户信息

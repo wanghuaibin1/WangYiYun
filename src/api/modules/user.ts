@@ -50,6 +50,20 @@ export const UserAPI = {
   },
 
   /**
+   * 获取用户歌单列表
+   * @param uid - 用户 ID
+   * @param limit - 每页数量，默认 50
+   * @param offset - 偏移量，分页使用
+   */
+  getUserPlaylist(uid: number, limit = 50, offset = 0) {
+    return request.get<ApiResponse<unknown>>('/user/playlist', {
+      uid,
+      limit,
+      offset,
+    })
+  },
+
+  /**
    * 获取用户信息+歌单/收藏/mv/dj数量统计（登录后调用，无参数）
    * @returns 返回用户各类数据的数量统计
    */
