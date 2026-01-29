@@ -9,7 +9,7 @@ import type {
 
 import { ref, type Ref } from 'vue'
 
-interface HttpResponse<T = unknown> {
+export interface HttpResponse<T = unknown> {
   loading: ref<boolean>
   data: ref<T | null>
   errMsg: ref<string | null>

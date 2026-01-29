@@ -28,7 +28,8 @@ export const useUserStore = defineStore('user', {
     bindMobile_phone: [], //用户绑定手机
     userThemeRGB: [30, 30, 30] as RGB, //用户头像主题色
     userCache: {} as Record<string, RGB>,
-    backTheme: true as boolean,
+    playThemRGB: [30, 30, 30] as RGB, //歌单封面主题色
+    backTheme: false as boolean,
   }),
 
   getters: {
@@ -166,7 +167,6 @@ export const useUserStore = defineStore('user', {
       }
     },
 
-
     /**
      * 获取用户绑定信息（登录后调用，必传用户ID）
      * @param uid - 用户 ID
@@ -214,6 +214,13 @@ export const useUserStore = defineStore('user', {
       const safeRGB = normalizeThemeColor(rgb)
       this.userThemeRGB = safeRGB
       this.userCache[coverUrl] = safeRGB
+    },
+
+    async setPlayThemeByCover(coverUrl: string) {
+      if (!coverUrl) return
+      const rgb = await getThemeColor(coverUrl)
+      console.log(rgb)
+      this.playThemRGB = normalizeThemeColor(rgb)
     },
     /**
      * 清除用户信息

@@ -1,9 +1,8 @@
 <template>
-  <button type="button" class="playlist-card">
+  <button type="button" class="playlist-card" @click="goPlaylist(item.id, item.coverImgUrl)">
     <div class="relative overflow-hidden rounded-2xl bg-slate-800/60 aspect-square">
-      <img :src="item.coverImgUrl" :alt="item.name" class="w-full h-full object-cover" />
+      <img :src="getCover(item.coverImgUrl)" :alt="item.name" class="w-full h-full object-cover" />
       <div class="absolute inset-0 bg-gradient-to-t from-black/45 via-black/10 to-transparent" />
-      <span class="playlist-count"> {{ item.trackCount || 0 }} 首 </span>
     </div>
     <p class="playlist-name" :title="item.name">
       {{ item.name }}
@@ -15,11 +14,13 @@
 </template>
 
 <script setup lang="ts">
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
 interface PlaylistItem {
   id: number | string
   name: string
   coverImgUrl: string
-  trackCount?: number
   playCount?: number
   creator?: {
     nickname?: string
@@ -29,6 +30,15 @@ interface PlaylistItem {
 defineProps<{
   item: PlaylistItem
 }>()
+const getCover = (url: string) => `${url}?param=250y250`
+const goPlaylist = (id: number | string, coverImgUrl: string) => {
+  console.log(coverImgUrl)
+  router.push({
+    name: 'playlist',
+    params: { id },
+    query: { coverImgUrl },
+  })
+}
 </script>
 
 <style scoped>
@@ -79,5 +89,3 @@ defineProps<{
   white-space: nowrap;
 }
 </style>
-
-

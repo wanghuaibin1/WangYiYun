@@ -23,11 +23,19 @@
 - ✅ 手动滚动歌词时自动定位居中歌词
 - ✅ 歌词时间轴精确匹配
 
-### 📚 播放列表
+### 📚 播放列表 & 歌单
 - ✅ 播放列表管理
 - ✅ 播放列表弹窗展示
 - ✅ 歌曲切换和删除
 - ✅ 播放模式适配
+- ✅ 歌单详情页（支持播放全部 / 点击单曲播放）
+- ✅ 首页推荐歌曲点击后**仅将该歌曲加入播放列表**，不重置整个列表
+
+### 🔍 搜索与推荐
+- ✅ 顶部全局搜索栏（历史记录、本地缓存）
+- ✅ 热搜榜展示与一键播放热搜
+- ✅ 搜索联想（关键词拆分 + 歌曲名联想）
+- ✅ 榜单卡片（古风榜 / 摇滚榜 / 民谣榜等）快捷播放
 
 ### 🔐 用户功能
 - ✅ 用户登录/登出
@@ -84,11 +92,7 @@ vue-project/
 │
 ├── src/                       # 源代码目录
 │   ├── api/                   # API 接口定义
-│   │   ├── modules/           # 模块化 API
-│   │   │   ├── login.ts       # 登录相关 API
-│   │   │   ├── song.ts        # 歌曲相关 API
-│   │   │   ├── search.ts      # 搜索相关 API（热搜、联想、搜索结果）
-│   │   │   └── user.ts        # 用户相关 API
+│   │   ├── modules/           # 模块化 API（登录 / 歌曲 / 搜索 / 用户 / 推荐 / 歌单等）
 │   │   ├── index.ts           # API 导出
 │   │   └── request.ts         # Axios 请求封装
 │   │
@@ -105,7 +109,7 @@ vue-project/
 │   │   │   ├── PlaybackControls.vue     # 播放/切歌控制
 │   │   │   ├── ProgressBar.vue          # 播放进度条
 │   │   │   └── VolumeControl.vue        # 音量控制
-│   │   └── player-control-bar/          # 底部播放控制栏
+│   │   └── PlayerControlBar/            # 底部播放控制栏
 │   │       └── index.vue
 │   │
 │   ├── hooks/                 # 组合式函数
@@ -150,8 +154,12 @@ vue-project/
 │   │   │   └── index.vue      # 首页（推荐/榜单/队列）
 │   │   ├── login/
 │   │   │   └── index.vue      # 登录页
+│   │   ├── personal-Homepage/
+│   │   │   └── index.vue      # 个人主页
 │   │   ├── play-page/
 │   │   │   └── index.vue      # 全屏歌词播放页
+│   │   ├── playlist/
+│   │   │   └── index.vue      # 歌单详情页（包含播放全部 / 单曲点击播放）
 │   │   ├── playlistPage/
 │   │   │   ├── component/
 │   │   │   │   └── PlaylistItem.vue     # 播放列表项
@@ -357,7 +365,7 @@ import { useSongStore } from '@/stores/modules/song'
 
 ## 🐛 已知问题
 
-- 部分功能仍在开发中（如搜索、歌单详情等）
+- 部分高级功能仍在迭代中（如更丰富的歌单管理、MV、评论等）
 - 需要后端 API 支持才能完整运行
 
 ## 🔮 未来计划

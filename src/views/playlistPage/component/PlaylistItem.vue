@@ -82,6 +82,7 @@ const coverUrl = computed(() => {
   return props.item.al.picUrl + `?param=${size}y${size}`
 })
 
+
 </script>
 
 <style scoped>

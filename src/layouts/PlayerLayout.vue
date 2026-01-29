@@ -1,11 +1,19 @@
 <template>
-  <div class="layout-shell" :class="{'user-background':UserStore.backTheme}"  :style="userThemeStyle">
+  <div
+    class="layout-shell"
+    :class="{ 'user-background': UserStore.backTheme }"
+    :style="userThemeStyle"
+  >
     <!-- 固定侧边栏 -->
     <aside class="layout-aside">
       <div class="aside-inner">
         <div class="logo">Music</div>
         <nav class="menu">
-          <RouterLink :to="{ name: 'home' }" class="menu-item" :class="{ active: route.name === 'home' }">
+          <RouterLink
+            :to="{ name: 'home' }"
+            class="menu-item"
+            :class="{ active: route.name === 'home' }"
+          >
             首页
           </RouterLink>
           <RouterLink
@@ -15,9 +23,13 @@
           >
             个人主页
           </RouterLink>
-          <RouterLink :to="{ name: 'play' }" class="menu-item" :class="{ active: route.name === 'play' }">
-            播放
-          </RouterLink>
+<!--          <RouterLink-->
+<!--            :to="{ name: 'play' }"-->
+<!--            class="menu-item"-->
+<!--            :class="{ active: route.name === 'play' }"-->
+<!--          >-->
+<!--            播放-->
+<!--          </RouterLink>-->
         </nav>
       </div>
     </aside>
@@ -27,16 +39,58 @@
         <div class="header-left">
           <div class="title">今日音乐</div>
           <div class="search-box-wrapper" ref="searchBoxWrapperRef">
-            <button class="back-button" @click="handleBack">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <!-- 上一页 -->
+            <button class="back-button" :disabled="!canGoBack" @click="handleBack">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M15 18L9 12L15 6"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </button>
+            <!-- 下一页 -->
+            <button class="forward-button" :disabled="!canGoForward" @click="handleForward">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M9 18L15 12L9 6"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
               </svg>
             </button>
             <div class="search-box">
               <span class="search-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/>
-                  <path d="M20 20L16 16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2" />
+                  <path
+                    d="M20 20L16 16"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                  />
                 </svg>
               </span>
               <input
@@ -48,13 +102,21 @@
                 @keydown.esc="headerShowSuggest = false"
                 @focus="headerShowSuggest = true"
               />
-              <button
-                v-if="headerKeyword"
-                class="clear-button"
-                @click="headerKeyword = ''"
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <button v-if="headerKeyword" class="clear-button" @click="headerKeyword = ''">
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M18 6L6 18M6 6L18 18"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
                 </svg>
               </button>
             </div>
@@ -69,9 +131,7 @@
                   <div v-if="headerHistory.length" class="header-history">
                     <div class="header-history-header">
                       <span class="header-history-title">历史搜索</span>
-                      <button class="header-history-clear" @click="clearHeaderHistory">
-                        清空
-                      </button>
+                      <button class="header-history-clear" @click="clearHeaderHistory">清空</button>
                     </div>
                     <div class="header-history-list">
                       <button
@@ -108,7 +168,9 @@
                           <span
                             :class="[
                               'header-hot-index',
-                              item.displayIndex <= 3 ? 'header-hot-index-top' : 'header-hot-index-normal',
+                              item.displayIndex <= 3
+                                ? 'header-hot-index-top'
+                                : 'header-hot-index-normal',
                             ]"
                           >
                             {{ item.displayIndex }}
@@ -123,9 +185,21 @@
 
                   <!-- 榜单区域：只在未输入时显示 -->
                   <div class="header-rank-section">
-                    <RankBoardCard :title="'古风榜'" :songs="headerRankSongs" @play-all="onHeaderPlayRank" />
-                    <RankBoardCard :title="'摇滚榜'" :songs="headerRankSongs" @play-all="onHeaderPlayRank" />
-                    <RankBoardCard :title="'民谣榜'" :songs="headerRankSongs" @play-all="onHeaderPlayRank" />
+                    <RankBoardCard
+                      :title="'古风榜'"
+                      :songs="headerRankSongs"
+                      @play-all="onHeaderPlayRank"
+                    />
+                    <RankBoardCard
+                      :title="'摇滚榜'"
+                      :songs="headerRankSongs"
+                      @play-all="onHeaderPlayRank"
+                    />
+                    <RankBoardCard
+                      :title="'民谣榜'"
+                      :songs="headerRankSongs"
+                      @play-all="onHeaderPlayRank"
+                    />
                   </div>
                 </template>
 
@@ -135,14 +209,19 @@
                     <button
                       v-for="(item, index) in headerSuggestionKeywords"
                       :key="item.fullText"
-                      :class="['header-suggest-item', { 'header-suggest-item-active': headerSuggestActiveIndex === index }]"
+                      :class="[
+                        'header-suggest-item',
+                        { 'header-suggest-item-active': headerSuggestActiveIndex === index },
+                      ]"
                       @click="applyHeaderSuggestion(item.fullText)"
                       @mouseenter="headerSuggestActiveIndex = index"
                     >
                       <span class="header-suggest-icon">🔍</span>
                       <span class="header-suggest-text">
                         <span class="header-suggest-keyword">{{ item.keyword }}</span>
-                        <span v-if="item.extension" class="header-suggest-extension">{{ item.extension }}</span>
+                        <span v-if="item.extension" class="header-suggest-extension">{{
+                          item.extension
+                        }}</span>
                       </span>
                     </button>
                   </div>
@@ -159,20 +238,13 @@
       </div>
     </header>
     <!-- 中部内容，独立滚动 -->
-    <main class="layout-main custom-scrollbar">
+    <main class="layout-main custom-scrollbar" ref="layoutMainRef">
       <router-view />
     </main>
 
     <!-- 中层：播放详情页，全屏覆盖在普通页面上，但在播放栏下面 -->
-    <transition
-      name="play-page"
-      @enter="onPlayPageEnter"
-      @after-leave="onPlayPageAfterLeave"
-    >
-      <div
-        v-if="SongStore.songDetailsDisplay"
-        class="play-page-wrapper"
-      >
+    <transition name="play-page" @enter="onPlayPageEnter" @after-leave="onPlayPageAfterLeave">
+      <div v-if="SongStore.songDetailsDisplay" class="play-page-wrapper">
         <PlayPage />
       </div>
     </transition>
@@ -192,7 +264,7 @@
 <script setup lang="ts">
 import { computed, onUnmounted, ref, watch, onMounted } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
-import { useSongStore,useUserStore } from '@/stores/index.ts'
+import { useSongStore, useUserStore } from '@/stores/index.ts'
 import { SearchAPI } from '@/api'
 import type { SearchSuggestResult, SearchHotItem } from '@/types/search'
 import type { Song } from '@/types/player'
@@ -200,7 +272,6 @@ import PlayerControlBar from '@/components/PlayerControlBar/index.vue'
 import PlayListPage from '@/views/PlayListPage/index.vue'
 import PlayPage from '@/views/play-page/index.vue'
 import RankBoardCard from '@/views/home/component/RankBoardCard.vue'
-
 
 const SongStore = useSongStore()
 const UserStore = useUserStore()
@@ -215,6 +286,15 @@ const headerHotKeywords = ref<SearchHotItem[]>([])
 const headerSuggestActiveIndex = ref<number>(-1)
 let headerSuggestTimer: number | undefined
 const searchBoxWrapperRef = ref<HTMLElement | null>(null)
+const layoutMainRef = ref<HTMLElement | null>(null)
+
+// 自定义路由历史栈（避免返回到登录页等 Layout 之外的页面）
+const historyStack = ref<string[]>([])
+const forwardStack = ref<string[]>([])
+const isNavigatingThroughHistory = ref(false)
+
+const canGoBack = computed(() => historyStack.value.length > 1)
+const canGoForward = computed(() => forwardStack.value.length > 0)
 
 const HEADER_HISTORY_KEY = 'header_search_history'
 
@@ -277,7 +357,7 @@ const headerSuggestionKeywords = computed(() => {
 
   // 去重并限制数量
   const unique = Array.from(
-    new Map(suggestions.map((item) => [item.fullText, item])).values()
+    new Map(suggestions.map((item) => [item.fullText, item])).values(),
   ).slice(0, 8)
 
   return unique
@@ -372,7 +452,7 @@ const fetchHeaderSuggest = async (q: string) => {
     return
   }
   try {
-    const { data } = await SearchAPI.suggest(q,'mobile')
+    const { data } = await SearchAPI.suggest(q, 'mobile')
     headerSuggestResult.value = data.value?.result || {}
   } catch (e) {
     console.error('获取搜索建议失败', e)
@@ -393,8 +473,41 @@ const handleHeaderSearch = () => {
   router.push({ name: 'search', query: { keyword: kw } })
 }
 
+// 上一页：只在 Layout 内部栈中返回，最远回到首页
 const handleBack = () => {
-  router.back()
+  if (historyStack.value.length <= 1) {
+    // 已经是栈底了，强制回到首页，而不是浏览器真正的上一页（如登录页）
+    if (route.name !== 'home') {
+      isNavigatingThroughHistory.value = true
+      router.push({ name: 'home' })
+    }
+    return
+  }
+
+  // 当前页出栈，压到 forward 栈
+  const currentPath = historyStack.value.pop()
+  if (currentPath) {
+    forwardStack.value.push(currentPath)
+  }
+
+  const targetPath = historyStack.value[historyStack.value.length - 1]
+  if (targetPath) {
+    isNavigatingThroughHistory.value = true
+    router.push(targetPath)
+  }
+}
+
+// 下一页：从 forward 栈中取出
+const handleForward = () => {
+  if (!forwardStack.value.length) return
+
+  const targetPath = forwardStack.value.pop()
+  if (!targetPath) return
+
+  // 前进时，目标页应加入 history 栈
+  historyStack.value.push(targetPath)
+  isNavigatingThroughHistory.value = true
+  router.push(targetPath)
 }
 
 watch(
@@ -410,6 +523,44 @@ watch(
   },
 )
 
+// 监听路由变化，控制 backTheme，并重置内容区滚动位置
+watch(
+  () => route.name,
+  (routeName) => {
+    // 只有进入个人主页或歌单详情页时，backTheme 才为 true
+    UserStore.backTheme = routeName === 'profile' || routeName === 'playlist'
+
+    // 每次路由切换时，将主内容区滚动到顶部
+    if (layoutMainRef.value) {
+      layoutMainRef.value.scrollTop = 0
+    }
+  },
+  { immediate: true }, // 立即执行一次，确保初始状态正确
+)
+
+// 监听完整路径，维护自定义历史栈
+watch(
+  () => route.fullPath,
+  (fullPath) => {
+    // 程序化的前进/后退导致的变化，交给 handleBack/handleForward 维护栈，这里不再重复处理
+    if (isNavigatingThroughHistory.value) {
+      isNavigatingThroughHistory.value = false
+      return
+    }
+
+    const stack = historyStack.value
+    const last = stack[stack.length - 1]
+
+    // 避免重复 push 相同路径
+    if (last === fullPath) return
+
+    stack.push(fullPath)
+    // 用户正常导航后，清空 forward 栈（行为与浏览器一致）
+    forwardStack.value = []
+  },
+  { immediate: true },
+)
+
 // 点击外部隐藏搜索建议面板
 const handleClickOutside = (event: MouseEvent) => {
   const target = event.target as Node
@@ -421,7 +572,6 @@ const handleClickOutside = (event: MouseEvent) => {
 onMounted(() => {
   loadHeaderHistory()
   fetchHeaderHot()
-  UserStore.setUserThemeByCover(UserStore.UserInfo.profile.avatarUrl)
 
   // 使用 mousedown 事件，在 focus 之前触发，避免冲突
   document.addEventListener('mousedown', handleClickOutside)
@@ -463,11 +613,18 @@ const onPlayPageAfterLeave = () => {
   savedScrollY = 0
 }
 
-
 // 配置用户头像的主题色
 
 const userThemeStyle = computed(() => {
-  const [r, g, b] = UserStore.userThemeRGB || [30, 30, 30]
+  let [r, g, b] = [30, 30, 30]
+
+  // 根据路由名称判断：个人主页使用 userThemeRGB，歌单详情页使用 playThemRGB
+  if (route.name === 'profile') {
+    [r, g, b] = UserStore.userThemeRGB || [30, 30, 30]
+  } else if (route.name === 'playlist') {
+    [r, g, b] = UserStore.playThemRGB || [30, 30, 30]
+  }
+
   return {
     '--user-theme-r': r,
     '--user-theme-g': g,
@@ -493,7 +650,6 @@ const userThemeStyle = computed(() => {
   background: #0b1221;
   color: #e5e7eb;
 }
-
 
 .layout-aside {
   position: fixed;
@@ -532,7 +688,9 @@ const userThemeStyle = computed(() => {
   border-radius: 12px;
   color: #cbd5e1;
   text-decoration: none;
-  transition: background 0.2s, color 0.2s;
+  transition:
+    background 0.2s,
+    color 0.2s;
 }
 
 .menu-item:hover,
@@ -951,7 +1109,8 @@ const userThemeStyle = computed(() => {
   background: transparent;
   color: #e5e7eb;
   font-size: 14px;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    sans-serif;
   line-height: 1.5;
   cursor: pointer;
   text-align: left;
@@ -1128,15 +1287,15 @@ const userThemeStyle = computed(() => {
       var(--user-theme-soft) 40%,
       rgba(0, 0, 0, 0) 70%
     ),
-      /* 整体染色层（铺满横向，不是中心） */
-    linear-gradient(
-      180deg,
-      rgba(var(--user-theme-r), var(--user-theme-g), var(--user-theme-b), 1),
-      rgba(var(--user-theme-r), var(--user-theme-g), var(--user-theme-b), 0.25),
-      rgba(var(--user-theme-r), var(--user-theme-g), var(--user-theme-b), 0)
-    ),
-      /* 永远存在的深色基底 */ linear-gradient(180deg, #1a1f16, #0b0f0a);
+    /* 整体染色层（铺满横向，不是中心） */
+      linear-gradient(
+        180deg,
+        rgba(var(--user-theme-r), var(--user-theme-g), var(--user-theme-b), 1),
+        rgba(var(--user-theme-r), var(--user-theme-g), var(--user-theme-b), 0.25),
+        rgba(var(--user-theme-r), var(--user-theme-g), var(--user-theme-b), 0)
+      ),
+    /* 永远存在的深色基底 */ linear-gradient(180deg, #1a1f16, #0b0f0a);
 
-  transition: background 0.6s ease;
+  transition: background 1s ease;
 }
 </style>

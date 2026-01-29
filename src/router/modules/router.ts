@@ -21,7 +21,7 @@ export const routes: RouteRecordRaw[] = [
       {
         path: 'profile',
         name: 'profile',
-        component: () => import('@/views/profile/index.vue'),
+        component: () => import('@/views/personal-Homepage/index.vue'),
         meta: { requiresAuth: true },
       },
       {
@@ -30,12 +30,12 @@ export const routes: RouteRecordRaw[] = [
         component: () => import('@/views/play-page/index.vue'),
         meta: { requiresAuth: true },
       },
-      // {
-      //   path: 'playlist',
-      //   name: 'playlist',
-      //   component: () => import('@/views/playlist/index.vue'),
-      //   meta: { requiresAuth: true },
-      // },
+      {
+        path: 'playlist/:id',
+        name: 'playlist',
+        component: () => import('@/views/playlist/index.vue'),
+        meta: { requiresAuth: true },
+      },
       {
         path: 'search',
         name: 'search',

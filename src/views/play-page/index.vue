@@ -35,7 +35,7 @@
       </div>
 
       <!-- 右侧：歌词滚动区域 -->
-      <div class="flex-1 flex flex-col h-full overflow-hidden relative">
+      <div class="flex-1 flex pt-10 pb-10 flex-col h-full overflow-hidden relative">
         <div
           ref="lyricListRef"
           class="flex-1 w-full max-w-2xl mx-auto overflow-y-auto pr-4 lyric-scroll scroll-smooth"
@@ -71,7 +71,7 @@
                 <div class="flex items-center justify-center">
                   <div class="text-center">
                     <p v-if="item.text" class="mb-1">{{ item.text }}</p>
-                    <p v-if="item.translate_intoChinese" class="text-sm text-gray-500">
+                    <p v-if="item.translate_intoChinese" class="text-sm ">
                       {{ item.translate_intoChinese }}
                     </p>
                   </div>
